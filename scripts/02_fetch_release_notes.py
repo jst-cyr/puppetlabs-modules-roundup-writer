@@ -15,7 +15,7 @@ Output:
 import argparse
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 import re
@@ -292,7 +292,7 @@ def main():
     # Prepare output
     output_data = {
         'metadata': {
-            'fetched_at': datetime.utcnow().isoformat() + 'Z',
+            'fetched_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
             'source_discovery_file': str(input_path),
             'modules_processed': len(release_notes)
         },
