@@ -15,7 +15,7 @@ import argparse
 import json
 import sys
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 from urllib.parse import urljoin
@@ -78,9 +78,57 @@ class ModuleDiscovery:
     def discover_from_html(self, html_content: str) -> List[Dict]:
         """
         Parse Forge listing HTML to extract module info.
-        Extract module slug, version, and release date from the listing cards.
+        Primary source is Next.js page data in __NEXT_DATA__.
+        Falls back to card scraping if needed.
         """
         soup = BeautifulSoup(html_content, 'html.parser')
+
+        # Preferred extraction path: parse embedded Next.js payload.
+        next_data = soup.find('script', id='__NEXT_DATA__')
+        if next_data and next_data.string:
+            try:
+                payload = json.loads(next_data.string)
+                results = (
+                    payload.get('props', {})
+                    .get('pageProps', {})
+                    .get('initialData', {})
+                    .get('results', [])
+                )
+                modules = []
+                for item in results:
+                    owner_slug = item.get('owner', {}).get('slug', '')
+                    raw_slug = item.get('slug', '')
+                    if owner_slug != 'puppetlabs' or not raw_slug:
+                        continue
+
+                    short_slug = raw_slug.replace('puppetlabs-', '', 1)
+                    release = item.get('current_release', {})
+                    version = release.get('version', '')
+                    created_at = release.get('created_at', '')
+
+                    if not version or not created_at:
+                        continue
+
+                    try:
+                        release_date = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z').strftime('%Y-%m-%d')
+                    except ValueError:
+                        continue
+
+                    modules.append({
+                        'name': item.get('name', short_slug),
+                        'slug': short_slug,
+                        'forge_url': f"https://forge.puppet.com/modules/puppetlabs/{short_slug}",
+                        'latest_version': version,
+                        'release_date': release_date,
+                        'released_in_target_month': False,
+                    })
+
+                if modules:
+                    return modules
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        # Fallback extraction from rendered card markup.
         modules = []
         seen_slugs = set()
 
@@ -159,8 +207,9 @@ class ModuleDiscovery:
         
         return {
             'metadata': {
-                'discovered_at': datetime.utcnow().isoformat() + 'Z',
-                'query_url': self.FORGE_LISTING_URL
+                'discovered_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+                'query_url': self.FORGE_LISTING_URL,
+                'modules_seen_on_page': len(modules),
             },
             'modules': modules
         }
