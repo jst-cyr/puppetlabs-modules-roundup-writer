@@ -16,7 +16,7 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import re
 
 try:
@@ -280,6 +280,8 @@ class RoundupGenerator:
     ) -> str:
         """Generate roundup markdown in the established post format."""
         markdown = []
+        intro_paragraphs = self._build_intro(highlights_data, release_notes_data, month_name, year)
+        closing_paragraphs = self._build_closing(highlights_data, release_notes_data, month_name, year)
 
         markdown.append(f"# Puppetlabs Modules Roundup – {month_name} {year}")
         markdown.append("")
@@ -287,10 +289,9 @@ class RoundupGenerator:
         markdown.append("**Tags:** #puppet")
         markdown.append("")
 
-        markdown.append("Welcome back to the Puppetlabs Modules Roundup! This series is all about keeping you in the loop on what’s new and updated in the Perforce Puppet `puppetlabs` modules on the Forge. This month we look back at the latest updates from {month} {year}.".format(month=month_name, year=year))
-        markdown.append("")
-        markdown.append("If you want a quick look at the latest developments across the Puppet module ecosystem, this is the place to catch up!")
-        markdown.append("")
+        for paragraph in intro_paragraphs:
+            markdown.append(paragraph)
+            markdown.append("")
 
         markdown.append("## Highlighted Updates")
         markdown.append("")
@@ -308,13 +309,113 @@ class RoundupGenerator:
 
         markdown.append("## Until Next Time!")
         markdown.append("")
-        markdown.append("That’s a wrap for this roundup! If you want to dive deeper into any of these modules, check out the module documentation [on the Forge](https://forge.puppet.com) or explore the individual module repos on GitHub for more details.")
-        markdown.append("")
-        markdown.append("Got feedback or ideas for future updates? We’d love to hear from you! Add a comment here or join the conversation in the [Perforce Community Slack](https://slack.puppet.com/).")
-        markdown.append("")
-        markdown.append("Catch you at the next roundup!")
+
+        for paragraph in closing_paragraphs:
+            markdown.append(paragraph)
+            markdown.append("")
 
         return "\n".join(markdown)
+
+    def _build_intro(
+        self,
+        highlights_data: Dict,
+        release_notes_data: Dict,
+        month_name: str,
+        year: int,
+    ) -> List[str]:
+        """Build two varied intro paragraphs for the roundup."""
+        module_count = len(release_notes_data.get('release_notes', []))
+        theme_titles = [theme.get('title') or theme.get('phrase') for theme in highlights_data.get('themes', [])]
+        theme_titles = [title for title in theme_titles if title]
+        theme_summary = self._theme_summary(theme_titles)
+        module_phrase = self._module_count_phrase(module_count)
+
+        first_paragraphs = [
+            f"{month_name} {year} brought {module_phrase} in the Puppetlabs Forge catalog, and this roundup pulls the most important changes into one place.",
+            f"In {month_name} {year}, the Puppetlabs module lineup saw {module_phrase}, with the most notable updates collected here for a quick review.",
+            f"This look back at {month_name} {year} covers {module_phrase} from Puppetlabs, with an emphasis on the changes most likely to matter in active environments.",
+        ]
+
+        second_paragraphs = [
+            f"This month’s updates leaned toward {theme_summary}, making the release set more about practical compatibility and operations work than large feature launches.",
+            f"Across the month, the clearest themes were {theme_summary}, so the summary below focuses on support changes, maintenance work, and operational impact.",
+            f"The overall pattern in these releases was {theme_summary}, which makes this month’s roundup a useful quick scan for teams planning upgrades or routine maintenance.",
+        ]
+
+        intro_index = self._variant_index(month_name, year, len(first_paragraphs))
+        return [
+            first_paragraphs[intro_index],
+            second_paragraphs[(intro_index + 1) % len(second_paragraphs)],
+        ]
+
+    def _build_closing(
+        self,
+        highlights_data: Dict,
+        release_notes_data: Dict,
+        month_name: str,
+        year: int,
+    ) -> List[str]:
+        """Build varied closing paragraphs for the roundup."""
+        module_count = len(release_notes_data.get('release_notes', []))
+        next_month_name, next_year = self._next_month(month_name, year)
+        top_modules = ', '.join(
+            module.get('name', '') for module in release_notes_data.get('release_notes', [])[:2] if module.get('name')
+        )
+        modules_reference = top_modules if top_modules else 'the modules above'
+
+        first_paragraphs = [
+            f"That wraps up the {month_name} {year} roundup. If any of {modules_reference} intersect with your environment, the linked Forge pages and release notes are worth a closer look.",
+            f"That’s the full pass through the {module_count} Puppetlabs module releases from {month_name} {year}. The Forge links above are the quickest path to the underlying release details.",
+            f"That closes out the {month_name} {year} update set. For deeper implementation detail, the linked module pages and release notes remain the best source of truth.",
+        ]
+
+        second_paragraphs = [
+            "If you have feedback on the roundup format or want a deeper look at a specific module area, the Perforce Community Slack is still the best place to continue the conversation.",
+            "Feedback on the series is always useful, especially if there are module families or release-note patterns that deserve more attention in future editions.",
+            "If there is a part of the Puppetlabs ecosystem that would benefit from more context in future roundups, that feedback is worth sending along.",
+        ]
+
+        final_lines = [
+            f"Catch you in the next roundup for {next_month_name} {next_year}.",
+            f"The next roundup will pick up with {next_month_name} {next_year} releases.",
+            f"More updates coming next month when the {next_month_name} {next_year} releases land.",
+        ]
+
+        closing_index = self._variant_index(month_name, year + module_count, len(first_paragraphs))
+        return [
+            first_paragraphs[closing_index],
+            second_paragraphs[(closing_index + 1) % len(second_paragraphs)],
+            final_lines[(closing_index + 2) % len(final_lines)],
+        ]
+
+    def _module_count_phrase(self, module_count: int) -> str:
+        """Return a readable module-count phrase for intro text."""
+        if module_count == 1:
+            return 'one Puppetlabs module release'
+        return f'{module_count} Puppetlabs module releases'
+
+    def _theme_summary(self, theme_titles: List[str]) -> str:
+        """Compress top theme titles into a readable summary phrase."""
+        if not theme_titles:
+            return 'routine maintenance and compatibility work'
+
+        normalized = [title.lower() for title in theme_titles[:2]]
+        if len(normalized) == 1:
+            return normalized[0]
+        return f"{normalized[0]} and {normalized[1]}"
+
+    def _variant_index(self, month_name: str, year: int, count: int) -> int:
+        """Choose a deterministic variant index for a given month and year."""
+        month_num = datetime.strptime(month_name, '%B').month
+        return (year * 12 + month_num) % count
+
+    def _next_month(self, month_name: str, year: int) -> Tuple[str, int]:
+        """Return the following month and year."""
+        month_num = datetime.strptime(month_name, '%B').month
+        if month_num == 12:
+            return 'January', year + 1
+        next_month_num = month_num + 1
+        return datetime(year, next_month_num, 1).strftime('%B'), year
     
     def validate(self, markdown: str) -> List[str]:
         """
