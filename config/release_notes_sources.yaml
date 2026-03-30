@@ -1,0 +1,101 @@
+# Release Notes Source Mapping for Puppetlabs Modules
+# 
+# This config defines where to fetch release notes for each module.
+# - forge_changelog: Fetch from Forge changelog tab (default for unlisted modules)
+# - external_docs: Custom URL patterns pointing to help.puppet.com or other docs
+# - manual_review: Skip automation, curator must provide notes manually
+
+forge_changelog:
+  # Most modules are listed here for clarity, but any unlisted module defaults to forge_changelog
+  - accounts
+  - apache
+  - apt
+  - augeas_core
+  - chocolatey
+  - concat
+  - cron_core
+  - dsc_lite
+  - docker
+  - edgeops
+  - exec
+  - firewall
+  - haproxy
+  - host_core
+  - iis
+  - inifile
+  - java
+  - java_ks
+  - lvm
+  - motd
+  - mount_core
+  - mysql
+  - ntp
+  - pe_event_forwarding
+  - peadm
+  - playbook_runner
+  - postgresql
+  - powershell
+  - puppet_agent
+  - pwshlib
+  - registry
+  - reboot
+  - sqlserver
+  - stdlib
+  - tomcat
+  - vcsrepo
+  - xinetd
+  - yumrepo_core
+  - zfs_core
+  - zone_core
+  - influxdb
+
+# Modules with custom external documentation sources
+external_docs:
+  # Security Compliance Enforcement for Linux
+  # Forge changelog links to versioned docs
+  sce_linux:
+    type: "help_puppet_versioned"
+    base_url: "https://help.puppet.com/sce/current/linux/"
+    url_pattern: "scel_relnotes_{version_underscore}.htm"
+    # e.g., version 2.6.0 becomes 260 in URL: scel_relnotes_260.htm
+    
+  # Security Compliance Enforcement for Windows
+  sce_windows:
+    type: "help_puppet_versioned"
+    base_url: "https://help.puppet.com/sce/current/windows/"
+    url_pattern: "scew_relnotes_{version_underscore}.htm"
+    # e.g., version 2.2.1 becomes v221 in URL: scew_relnotes_v221.htm
+    version_transform: "v"  # prepend 'v' to underscore version
+    
+  # Continuous Delivery Modules
+  # Forge changelog links to central docs (NOT version-specific in URL)
+  cd4peadm:
+    type: "help_puppet_fixed"
+    base_url: "https://help.puppet.com/cdpe/current/Content/UserGuide/CDPE/ReleaseNotes/"
+    url_pattern: "cd_release_notes.htm"
+    note: "Not version-specific; always points to current docs"
+    
+  # Compliance Modules
+  comply:
+    type: "help_puppet_fixed"
+    base_url: "https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/"
+    url_pattern: "release_notes.htm"
+    
+  complyadm:
+    type: "help_puppet_fixed"
+    base_url: "https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/"
+    url_pattern: "release_notes.htm"
+    
+  # Observability Data Connector (formerly puppet_data_connector)
+  puppet_data_connector:
+    type: "forge_changelog"  # Has Forge changelog, use that
+    
+  puppet_operational_dashboards:
+    type: "forge_changelog"
+
+# Modules requiring manual curator review
+# (e.g., complex release notes, multiple sources, or judgment calls needed)
+manual_review: []
+
+# Default: If a module is not listed above, assume forge_changelog
+default_source: "forge_changelog"
