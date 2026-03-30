@@ -28,22 +28,14 @@ except ImportError:
 
 class RoundupGenerator:
     """Generate final roundup markdown from curated highlights and release notes."""
-    
-    # Template for each module entry
-    MODULE_TEMPLATE = """### {name} [{version}](https://forge.puppet.com/modules/{slug})
 
-Released {release_date}
-
-{bullets}
-"""
-    
     def __init__(self, template_path: Optional[Path] = None):
         """Initialize generator with optional template file."""
         self.template_path = template_path or Path('MONTHLY_ROUNDUP_TEMPLATE.md')
         self.template_content = None
         
         if self.template_path.exists():
-            with open(self.template_path, 'r') as f:
+            with open(self.template_path, 'r', encoding='utf-8') as f:
                 self.template_content = f.read()
     
     def generate(
@@ -65,85 +57,145 @@ Released {release_date}
         Returns:
             Complete markdown content for roundup post
         """
-        if not self.template_content:
-            return self._generate_without_template(highlights_data, release_notes_data, month_name, year)
-        
-        # Fill template placeholders
-        markdown = self.template_content
-        
-        # Title and intro
-        title = f"Puppetlabs Modules Roundup – {month_name} {year}"
-        markdown = markdown.replace('{{TITLE}}', title)
-        markdown = markdown.replace('{{MONTH}}', month_name)
-        markdown = markdown.replace('{{YEAR}}', str(year))
-        
-        # Highlighted updates section
-        highlighted_updates = self._format_highlights(highlights_data)
-        markdown = markdown.replace('{{HIGHLIGHTED_UPDATES}}', highlighted_updates)
-        
-        # Module entries (alphabetical order)
-        module_entries = self._format_module_entries(release_notes_data)
-        markdown = markdown.replace('{{MODULES}}', module_entries)
-        
-        # Validate no placeholders remain
-        remaining_placeholders = re.findall(r'\{\{[A-Z_]+\}\}', markdown)
-        if remaining_placeholders:
-            print(f"WARNING: Unresolved placeholders found: {remaining_placeholders}", file=sys.stderr)
-        
-        return markdown
+        return self._generate_post(highlights_data, release_notes_data, month_name, year)
     
     def _format_highlights(self, highlights_data: Dict) -> str:
         """Format highlighted updates section from curated highlights."""
         sections = []
-        
-        # Themes
         themes = highlights_data.get('themes', [])
-        if themes:
-            theme_bullets = []
-            for theme in themes:
-                phrase = theme.get('phrase', '')
-                description = theme.get('description', '')
-                if phrase:
-                    theme_bullets.append(f"- **{phrase}**: {description}")
-            
-            if theme_bullets:
-                sections.append("## Key Themes\n\n" + "\n".join(theme_bullets))
-        
-        # Breaking changes
+        major_features = highlights_data.get('major_features', [])
+        single_updates = highlights_data.get('single_important_updates', [])
         breaking = highlights_data.get('breaking_changes', [])
-        if breaking:
-            breaking_bullets = []
-            for item in breaking:
-                module = item.get('module', '')
-                bullet = item.get('bullet', '')
-                if module and bullet:
-                    breaking_bullets.append(f"- **{module}**: {bullet}")
-            
-            if breaking_bullets:
-                sections.append("## Breaking Changes\n\n" + "\n".join(breaking_bullets[:5]))
-        
-        # Security updates
         security = highlights_data.get('security_updates', [])
+
+        for theme in themes[:2]:
+            title = theme.get('title') or theme.get('phrase') or 'Notable theme'
+            description = theme.get('description', '').strip()
+            bullets = []
+
+            for module_name in theme.get('modules', []):
+                feature = self._find_best_item_for_theme(theme, major_features, single_updates, module_name)
+
+                if feature and feature.get('bullet'):
+                    bullets.append(feature['bullet'])
+
+            if not bullets and theme.get('affected_modules'):
+                bullets.append(f"Affected modules: {theme['affected_modules']}")
+
+            sections.append(self._format_highlight_block(title, description, self._dedupe_preserve_order(bullets)[:2]))
+
+        if not sections and major_features:
+            top_features = major_features[:2]
+            for feature in top_features:
+                title = feature.get('title', 'Notable update')
+                description = feature.get('description', '').strip()
+                bullet = feature.get('bullet', '').strip()
+                sections.append(self._format_highlight_block(title, description, [bullet] if bullet else []))
+
+        if breaking:
+            bullets = [f"{item['module']}: {item['bullet']}" for item in breaking[:2] if item.get('module') and item.get('bullet')]
+            if bullets:
+                sections.append(self._format_highlight_block('Breaking changes to review', 'A small number of releases include compatibility-impacting changes that may need extra review before rollout.', bullets))
+
         if security:
-            security_bullets = []
-            for item in security:
-                module = item.get('module', '')
-                bullet = item.get('bullet', '')
-                if module and bullet:
-                    security_bullets.append(f"- **{module}**: {bullet}")
-            
-            if security_bullets:
-                sections.append("## Security Updates\n\n" + "\n".join(security_bullets[:5]))
-        
-        return "\n\n".join(sections) if sections else "_No major themes identified this month._"
+            bullets = [f"{item['module']}: {item['bullet']}" for item in security[:2] if item.get('module') and item.get('bullet')]
+            if bullets:
+                sections.append(self._format_highlight_block('Security-related updates', 'The following releases include security-relevant fixes or related maintenance work.', bullets))
+
+        return "\n\n".join(section for section in sections if section) if sections else "_No major themes identified this month._"
+
+    def _format_highlight_block(self, title: str, summary: str, bullets: List[str]) -> str:
+        """Format a single highlight section in roundup style."""
+        lines = [f"### {title}"]
+
+        if summary:
+            lines.append("")
+            lines.append(summary)
+
+        cleaned_bullets = [bullet.strip().rstrip('.') + '.' for bullet in bullets if bullet and bullet.strip()]
+        if cleaned_bullets:
+            lines.append("")
+            lines.extend([f"- {bullet}" for bullet in cleaned_bullets])
+
+        return "\n".join(lines)
+
+    def _find_feature_for_module(self, items: List[Dict], module_name: str) -> Optional[Dict]:
+        """Return the first highlight item that matches a module name."""
+        for item in items:
+            if item.get('module') == module_name:
+                return item
+        return None
+
+    def _find_best_item_for_theme(
+        self,
+        theme: Dict,
+        major_features: List[Dict],
+        single_updates: List[Dict],
+        module_name: str,
+    ) -> Optional[Dict]:
+        """Pick the module-specific highlight item that best matches the theme text."""
+        candidates = [item for item in major_features + single_updates if item.get('module') == module_name]
+        if not candidates:
+            return None
+
+        theme_text = ' '.join(
+            [
+                theme.get('title', ''),
+                theme.get('phrase', ''),
+                theme.get('description', ''),
+                theme.get('candidate_reason', ''),
+            ]
+        )
+        theme_keywords = self._keyword_set(theme_text)
+
+        if not theme_keywords:
+            return candidates[0]
+
+        best_item = candidates[0]
+        best_score = -1
+        for item in candidates:
+            candidate_text = ' '.join(
+                [item.get('title', ''), item.get('description', ''), item.get('bullet', '')]
+            )
+            score = len(theme_keywords & self._keyword_set(candidate_text))
+            if score > best_score:
+                best_item = item
+                best_score = score
+
+        return best_item
+
+    def _keyword_set(self, text: str) -> set[str]:
+        """Extract a compact keyword set for loose theme matching."""
+        stop_words = {
+            'the', 'and', 'for', 'with', 'that', 'this', 'from', 'into', 'across',
+            'more', 'most', 'than', 'have', 'has', 'had', 'was', 'were', 'will',
+            'now', 'new', 'its', 'their', 'while', 'also', 'allow', 'allows',
+            'making', 'make', 'made', 'using', 'used', 'use', 'updates', 'update',
+            'improvements', 'improvement', 'several', 'focused', 'focuses', 'release',
+            'releases', 'module', 'modules', 'support', 'supported'
+        }
+        words = re.findall(r'[a-z0-9_]{3,}', text.lower())
+        return {word for word in words if word not in stop_words}
+
+    def _dedupe_preserve_order(self, items: List[str]) -> List[str]:
+        """Remove duplicates while preserving first-seen order."""
+        seen = set()
+        deduped = []
+        for item in items:
+            normalized = self._plain_text(item).lower()
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            deduped.append(item)
+        return deduped
     
     def _format_module_entries(self, release_notes_data: Dict) -> str:
         """Format module entries (alphabetical order)."""
         modules = release_notes_data.get('release_notes', [])
-        
+
         # Sort alphabetically by module name
         modules_sorted = sorted(modules, key=lambda m: m.get('name', '').lower())
-        
+
         entries = []
         for module in modules_sorted:
             name = module.get('name', '')
@@ -151,57 +203,117 @@ Released {release_date}
             version = module.get('version', '')
             release_date = module.get('release_date', '')
             bullets = module.get('parsed_bullets', [])
-            
+
             if not (name and slug and version):
                 continue
-            
-            # Format bullets
-            bullet_text = '\n'.join([f"- {bullet}" for bullet in bullets[:5]])  # First 5 bullets
-            
-            entry = f"""### {name} [{version}](https://forge.puppet.com/modules/{slug})
 
-Released {release_date}
+            forge_url = module.get('forge_url') or f"https://forge.puppet.com/modules/puppetlabs/{slug}"
+            summary = self._summarize_module(module)
+            bullet_lines = [f"- {bullet}" for bullet in bullets[:5] if bullet]
+            optional_line = self._optional_release_notes_line(module)
 
-{bullet_text}"""
+            entry_lines = [
+                f"### {name} {version}",
+                "",
+                f"📅 Latest release: {release_date} (🌐 [View on the Forge]({forge_url}))",
+                "",
+                summary,
+            ]
+
+            if bullet_lines:
+                entry_lines.append("")
+                entry_lines.extend(bullet_lines)
+
+            if optional_line:
+                entry_lines.append("")
+                entry_lines.append(optional_line)
+
+            entry = "\n".join(entry_lines)
             entries.append(entry)
-        
-        return "\n\n".join(entries)
-    
-    def _generate_without_template(
+
+        return "\n\n---\n\n".join(entries)
+
+    def _summarize_module(self, module: Dict) -> str:
+        """Create a short editorial summary for a module entry."""
+        bullets = [bullet.strip() for bullet in module.get('parsed_bullets', []) if bullet and bullet.strip()]
+        name = module.get('name', 'This module')
+
+        if not bullets:
+            return f"{name} received a maintenance update this month."
+
+        first_bullet = self._strip_attribution(bullets[0]).rstrip('.')
+        if len(bullets) == 1:
+            return f"This release focuses on {first_bullet[:1].lower() + first_bullet[1:]}."
+
+        second_bullet = self._strip_attribution(bullets[1]).rstrip('.')
+        return f"This release focuses on {first_bullet[:1].lower() + first_bullet[1:]} while also addressing {second_bullet[:1].lower() + second_bullet[1:]}."
+
+    def _strip_attribution(self, bullet: str) -> str:
+        """Trim trailing contributor attribution and excess whitespace from a changelog bullet."""
+        bullet = self._plain_text(bullet)
+        bullet = re.sub(r'\s*\(#\d+\)\s*$', '', bullet)
+        return re.sub(r'\s+', ' ', bullet).strip()
+
+    def _plain_text(self, text: str) -> str:
+        """Convert simple markdown links to plain text and normalize spacing."""
+        text = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', text)
+        return re.sub(r'\s+', ' ', text).strip()
+
+    def _optional_release_notes_line(self, module: Dict) -> str:
+        """Return an additional release notes link line when the source is external docs."""
+        if module.get('source') != 'external_docs':
+            return ''
+
+        version = module.get('version', '')
+        source_url = module.get('source_url', '')
+        if not source_url:
+            return ''
+
+        return f"- Check the official [release notes for {module.get('name')} {version}]({source_url})"
+
+    def _generate_post(
         self,
         highlights_data: Dict,
         release_notes_data: Dict,
         month_name: str,
         year: int
     ) -> str:
-        """Generate without template (fallback)."""
+        """Generate roundup markdown in the established post format."""
         markdown = []
-        
-        # Title
+
         markdown.append(f"# Puppetlabs Modules Roundup – {month_name} {year}")
         markdown.append("")
-        
-        # Intro
-        markdown.append(f"This month we're catching up on the Puppetlabs modules released in {month_name} {year}.")
+
+        markdown.append("**Tags:** #puppet")
         markdown.append("")
-        
-        # Highlighted updates
+
+        markdown.append("Welcome back to the Puppetlabs Modules Roundup! This series is all about keeping you in the loop on what’s new and updated in the Perforce Puppet `puppetlabs` modules on the Forge. This month we look back at the latest updates from {month} {year}.".format(month=month_name, year=year))
+        markdown.append("")
+        markdown.append("If you want a quick look at the latest developments across the Puppet module ecosystem, this is the place to catch up!")
+        markdown.append("")
+
         markdown.append("## Highlighted Updates")
         markdown.append("")
         markdown.append(self._format_highlights(highlights_data))
         markdown.append("")
-        
-        # Module entries
-        markdown.append("## Module Updates")
+
+        markdown.append(f"## What Updates Happened to Puppetlabs Modules in {month_name} {year}?")
+        markdown.append("")
+        markdown.append(f"The following is an alphabetical listing of modules which received updates in {month_name} {year}. If a module had multiple versions released, the updates are collected together, numbered with the \"latest\" version available.")
+        markdown.append("")
+        markdown.append("---")
         markdown.append("")
         markdown.append(self._format_module_entries(release_notes_data))
         markdown.append("")
-        
-        # Closing
+
         markdown.append("## Until Next Time!")
         markdown.append("")
-        markdown.append("Until next month, go forth and keep those Puppet modules up to date. As always, you can find all of these releases on the [Puppet Forge](https://forge.puppet.com/).")
-        
+        markdown.append("That’s a wrap for this roundup! If you want to dive deeper into any of these modules, check out the module documentation [on the Forge](https://forge.puppet.com) or explore the individual module repos on GitHub for more details.")
+        markdown.append("")
+        markdown.append("Got feedback or ideas for future updates? We’d love to hear from you! Add a comment here or join the conversation in the [Perforce Community Slack](https://slack.puppet.com/).")
+        markdown.append("")
+        markdown.append("Catch you at the next roundup!")
+
         return "\n".join(markdown)
     
     def validate(self, markdown: str) -> List[str]:
@@ -218,10 +330,16 @@ Released {release_date}
         if placeholders:
             errors.append(f"Unresolved placeholders: {', '.join(set(placeholders))}")
         
-        # Check for module entries (should have at least 5)
-        module_headers = re.findall(r'^### .+', markdown, re.MULTILINE)
-        if len(module_headers) < 5:
-            errors.append(f"Expected at least 5 module entries, found {len(module_headers)}")
+        module_section_match = re.search(
+            r'## What Updates Happened to Puppetlabs Modules.*?\n(.*?)\n## Until Next Time!',
+            markdown,
+            re.DOTALL,
+        )
+        module_section = module_section_match.group(1) if module_section_match else ''
+
+        module_headers = re.findall(r'^### .+ \d', module_section, re.MULTILINE)
+        if not module_headers:
+            errors.append('No module entries were generated')
         
         # Check alphabetical order of modules
         module_names = []
@@ -236,9 +354,16 @@ Released {release_date}
             errors.append("Module entries not in alphabetical order")
         
         # Check that all modules have URLs
-        missing_urls = re.findall(r'### .+$(?!.*https://)', markdown, re.MULTILINE)
+        release_lines = re.findall(r'^📅 Latest release: .+$', module_section, re.MULTILINE)
+        missing_urls = [line for line in release_lines if 'https://' not in line]
         if missing_urls:
-            errors.append(f"Some module entries missing Forge URLs: {missing_urls}")
+            errors.append('Some module entries are missing Forge URLs')
+
+        if '## Highlighted Updates' not in markdown:
+            errors.append('Highlighted Updates section is missing')
+
+        if '## Until Next Time!' not in markdown:
+            errors.append('Until Next Time section is missing')
         
         return errors
 
@@ -289,10 +414,10 @@ def main():
         print(f"ERROR: Release notes file not found: {release_notes_path}", file=sys.stderr)
         sys.exit(1)
     
-    with open(highlights_path, 'r') as f:
+    with open(highlights_path, 'r', encoding='utf-8') as f:
         highlights_data = yaml.safe_load(f)
     
-    with open(release_notes_path, 'r') as f:
+    with open(release_notes_path, 'r', encoding='utf-8') as f:
         release_notes_data = json.load(f)
     
     # Infer month/year if not provided
@@ -333,7 +458,7 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Save output
-    with open(output_path, 'w') as f:
+    with open(output_path, 'w', encoding='utf-8') as f:
         f.write(markdown)
     
     print(f"Roundup generated successfully!", file=sys.stderr)
