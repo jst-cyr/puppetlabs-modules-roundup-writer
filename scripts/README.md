@@ -16,8 +16,10 @@ This pipeline automates the mechanical parts of the roundup process while preser
 Install dependencies:
 
 ```bash
-pip install requests beautifulsoup4 pyyaml
+pip install -r requirements.txt
 ```
+
+**No API keys needed!** Stage 3 uses GitHub Copilot (Opus model) in VS Code. Just use `Ctrl+I` to invoke it.
 
 ## Usage
 
@@ -64,32 +66,62 @@ python scripts/02_fetch_release_notes.py --input data/march_2026_modules_discove
 - CD modules (cd4peadm, comply): help.puppet.com with fixed URLs
 - Others: manual_review (for complex cases)
 
-### Stage 3: Extract Highlights
+### Stage 3: Extract Highlights (GitHub Copilot Analysis)
 
-Analyze released notes to detect themes, breaking changes, features, and security updates.
+Use GitHub Copilot to intelligently analyze release notes and identify trends, themes, and highlights.
 
 ```bash
 python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json
 ```
 
 **Output:**
-- `data/march_2026_highlights_candidates.yaml` (for curator to edit)
+- `data/march_2026_highlights_candidates.yaml` (for curator to review and edit)
 
 **What it does:**
-- Scans all parsed bullets for keyword patterns:
-  - **Breaking changes**: "removed", "deprecated", "breaking change"
-  - **Features**: "added", "new", "support for"
-  - **Security**: "CVE", "security", "vulnerability"
-  - **Themes**: Detects repeated phrases (e.g., "Puppet 7", "Windows Server 2025")
-- Outputs YAML with candidates in each category
-- **Curator task**: Review and **delete rows you don't want** in final roundup
+1. Reads all release notes from Stage 2
+2. Generates a detailed analysis task/prompt
+3. Displays the prompt for you to copy
+4. You paste the prompt into GitHub Copilot (Ctrl+I)
+5. Copilot analyzes and returns structured YAML results
+6. You run the script again with `--from-file` to save results
 
-**Note:**
-⚠️ This stage requires **manual curation**. The YAML output includes auto-detected candidates, but you should:
-- Delete themes/features/breaking changes that aren't noteworthy
-- Reorder by importance (top items used first)
-- Add module names to themes if not auto-detected
-- The generator will use only the retained rows
+**Step-by-step workflow:**
+
+```bash
+# Step 1: Generate analysis prompt
+python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json
+
+# Step 2: In VS Code, press Ctrl+I to open GitHub Copilot
+# Then paste the prompt from the terminal output
+
+# Step 3: Copilot returns YAML—copy it to a temporary file
+# (e.g., highlight_results.yaml)
+
+# Step 4: Load the results
+python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json --from-file highlight_results.yaml
+
+# Step 5: Results saved to data/march_2026_highlights_candidates.yaml
+```
+
+**Why this approach?**
+- No external API keys needed—uses your existing Copilot access
+- Copilot's Opus model is excellent at semantic analysis
+- Highlights are **dynamically determined** based on actual content
+- Curator maintains editorial control before final generation
+
+**Copilot identifies:**
+- **Cross-module themes**: Patterns in multiple modules (e.g., "Puppet 8 support appears in 5 modules")
+- **Breaking changes**: Removals, deprecations, incompatibilities
+- **Major features**: Significant new capabilities
+- **Security updates**: CVE fixes and vulnerabilities
+- **Important one-offs**: Standout single-module changes
+
+**Editor mode (optional):**
+After loading the results, you can directly edit `data/march_2026_highlights_candidates.yaml` to:
+- ✅ Keep highlights that are noteworthy
+- ❌ Delete trivial or module-specific items
+- 📝 Edit descriptions to match your wording
+- ➕ Add new highlights if Copilot missed important patterns
 
 ### Stage 4: Generate Roundup
 
@@ -131,12 +163,19 @@ python scripts/01_discover_modules.py --month March --year 2026
 # Stage 2: Fetch release notes for those modules
 python scripts/02_fetch_release_notes.py --input data/march_2026_modules_discovered.json
 
-# Stage 3: Extract highlights candidates
+# Stage 3a: Generate analysis prompt for GitHub Copilot
 python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json
 
-# ⚠️ CURATOR: Edit data/march_2026_highlights_candidates.yaml
-# (delete rows you don't want in final roundup)
-# Edit in your editor: remove unwanted themes/features/breaking_changes
+# ✨ Copy the prompt that appeared in the terminal
+# Open GitHub Copilot in VS Code with Ctrl+I
+# Paste the prompt and wait for Copilot to respond
+# Copy the YAML results to a file (e.g., highlight_results.yaml)
+
+# Stage 3b: Load the Copilot results
+python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json --from-file highlight_results.yaml
+
+# 📝 (Optional) Curator review: Edit data/march_2026_highlights_candidates.yaml
+# Delete rows you don't want, add new patterns if you spot them
 
 # Stage 4: Generate final roundup
 python scripts/04_generate_roundup.py \
@@ -198,9 +237,21 @@ See `data/SCHEMA.md` for complete documentation of:
 - For external docs modules, check config/release_notes_sources.yaml for correct URL pattern
 - Check raw_html/ directory for downloaded HTML (debug what was parsed)
 
-**Stage 3: Highlights seem off**
-- This is expected! Stage 3 is auto-detection, meant for human review
-- Curator responsibility: delete rows that aren't noteworthy in Stage 3 YAML
+**Stage 3: Copilot not responding**
+- Verify GitHub Copilot is installed in VS Code
+- Press Ctrl+I to open the Copilot chat panel
+- Check VS Code is signed in (bottom-left profile icon)
+- If prompts are truncated, manually save the full prompt from terminal output to a text file and paste into Copilot
+
+**Stage 3: YAML parsing fails**
+- Check that Copilot returned pure YAML (no markdown code blocks)
+- If Copilot wrapped it in ```yaml ... ```, remove the code block markers before saving
+- Validate YAML with: `python -m yaml <file.yaml>`
+
+**Stage 3: Highlights incomplete**
+- Copilot analyzes intelligently—different patterns each month based on content
+- If important themes missing: edit YAML manually to add them
+- You can also re-run Copilot with a slightly modified prompt asking specifically about those themes
 
 **Stage 4: Validation errors**
 - Script will print warnings if modules aren't alphabetical or URLs missing

@@ -1,0 +1,62 @@
+# Quick Start
+
+Run a full monthly roundup in four stages.
+
+## 1) Install dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+## 2) Discover modules released in the target month
+
+```powershell
+python scripts/01_discover_modules.py --month March --year 2026
+```
+
+Expected output file:
+- data/march_2026_modules_discovered.json
+
+## 3) Fetch release notes and parse bullets
+
+```powershell
+python scripts/02_fetch_release_notes.py --input data/march_2026_modules_discovered.json
+```
+
+Expected output files:
+- data/march_2026_release_notes_raw.json
+- data/raw_html/*.html
+
+## 4) Generate highlights candidates with Copilot
+
+```powershell
+python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json
+```
+
+Then:
+- Copy the prompt from terminal output.
+- Open Copilot chat in VS Code with Ctrl+I.
+- Paste prompt and get YAML output.
+- Save YAML to a file, then load it:
+
+```powershell
+python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json --from-file highlight_results.yaml
+```
+
+Expected output file:
+- data/march_2026_highlights_candidates.yaml
+
+## 5) Generate final post
+
+```powershell
+python scripts/04_generate_roundup.py --highlights data/march_2026_highlights_candidates.yaml --release-notes data/march_2026_release_notes_raw.json
+```
+
+Expected output file:
+- posts/2026-03 March 2026 Puppetlabs Modules Roundup.md
+
+## Notes
+
+- `config/release_notes_sources.yaml` is an override map plus a default source.
+- `external_docs` should only contain modules that need non-Forge URLs.
+- Any module not explicitly overridden uses `default_source: forge_changelog`.

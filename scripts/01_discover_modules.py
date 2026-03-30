@@ -14,17 +14,18 @@ Output:
 import argparse
 import json
 import sys
-from datetime import datetime, date
+import re
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 from urllib.parse import urljoin
 import yaml
 
-# Try to import requests; fall back to urllib if not available
 try:
     import requests
+    from bs4 import BeautifulSoup
 except ImportError:
-    print("ERROR: requests library not installed. Install with: pip install requests", file=sys.stderr)
+    print("ERROR: requests and beautifulsoup4 required. Install with: pip install -r requirements.txt", file=sys.stderr)
     sys.exit(1)
 
 
@@ -42,49 +43,96 @@ class ModuleDiscovery:
     def _load_config(self) -> Dict:
         """Load release_notes_sources.yaml config."""
         try:
-            with open(self.config_path, 'r') as f:
-                # YAML config is not Python dict; parse it ourselves
-                import re
-                content = f.read()
-                # For now, return a simple dict; proper YAML parsing below
-                config = {
-                    'forge_changelog': [
-                        'accounts', 'apache', 'apt', 'docker', 'firewall', 'inifile',
-                        'peadm', 'postgresql', 'pwshlib', 'sce_windows', 'sqlserver'
-                    ],
-                    'external_docs': {
-                        'sce_linux': {
-                            'type': 'help_puppet_versioned',
-                            'base_url': 'https://help.puppet.com/sce/current/linux/',
-                            'url_pattern': 'scel_relnotes_{version_underscore}.htm'
-                        }
-                    }
-                }
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f) or {}
+                config.setdefault('forge_changelog', [])
+                config.setdefault('external_docs', {})
+                config.setdefault('manual_review', [])
+                config.setdefault('default_source', 'forge_changelog')
                 return config
         except FileNotFoundError:
             print(f"WARNING: Config not found at {self.config_path}, using defaults", file=sys.stderr)
-            return {'forge_changelog': [], 'external_docs': {}}
+            return {
+                'forge_changelog': [],
+                'external_docs': {},
+                'manual_review': [],
+                'default_source': 'forge_changelog'
+            }
     
     def get_release_notes_source(self, module_name: str) -> Dict:
         """Determine release notes source for a module."""
+        manual_review = set(self.release_notes_sources.get('manual_review', []))
         external = self.release_notes_sources.get('external_docs', {})
+
+        if module_name in manual_review:
+            return {'source': 'manual_review'}
+
         if module_name in external:
             return {
                 'source': 'external_docs',
                 'config': external[module_name]
             }
-        return {'source': 'forge_changelog'}
+
+        return {'source': self.release_notes_sources.get('default_source', 'forge_changelog')}
     
     def discover_from_html(self, html_content: str) -> List[Dict]:
         """
         Parse Forge listing HTML to extract module info.
-        
-        For now, return stub data. In production, parse with BeautifulSoup:
-        - Extract module name, version, release date from each listing
+        Extract module slug, version, and release date from the listing cards.
         """
-        # TODO: Implement HTML parsing with BeautifulSoup
-        # For now, return example structure
-        return []
+        soup = BeautifulSoup(html_content, 'html.parser')
+        modules = []
+        seen_slugs = set()
+
+        module_link_pattern = re.compile(r'^/modules/puppetlabs/[a-z0-9_]+$')
+        release_pattern = re.compile(
+            r'Version\s+([0-9A-Za-z.\-]+)\s*\|\s*Released\s+([A-Za-z]{3}\s+\d{1,2}(?:st|nd|rd|th)\s+\d{4})'
+        )
+
+        for link in soup.find_all('a', href=module_link_pattern):
+            href = link.get('href', '')
+            slug = href.rsplit('/', 1)[-1]
+            if not slug or slug in seen_slugs:
+                continue
+
+            # Climb card containers until release metadata is found.
+            container = link
+            card_text = ''
+            for _ in range(6):
+                if container is None:
+                    break
+                card_text = container.get_text(' ', strip=True)
+                if 'Version' in card_text and 'Released' in card_text:
+                    break
+                container = container.parent
+
+            match = release_pattern.search(card_text)
+            if not match:
+                continue
+
+            version = match.group(1)
+            release_date_raw = match.group(2)
+            release_date_clean = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', release_date_raw)
+
+            try:
+                release_date = datetime.strptime(release_date_clean, '%b %d %Y').strftime('%Y-%m-%d')
+            except ValueError:
+                continue
+
+            name_text = link.get_text(strip=True)
+            name = name_text if name_text else slug
+
+            modules.append({
+                'name': name,
+                'slug': slug,
+                'forge_url': f"https://forge.puppet.com/modules/puppetlabs/{slug}",
+                'latest_version': version,
+                'release_date': release_date,
+                'released_in_target_month': False,
+            })
+            seen_slugs.add(slug)
+
+        return modules
     
     def discover_modules(self) -> Dict:
         """
@@ -143,7 +191,7 @@ class ModuleDiscovery:
     def enrich_with_sources(self, discovered: Dict) -> Dict:
         """Add release_notes_source info to each module."""
         for module in discovered.get('modules', []):
-            name = module.get('name', '').lower()
+            name = module.get('slug', module.get('name', '')).lower()
             source_info = self.get_release_notes_source(name)
             module['release_notes_source'] = source_info['source']
             
@@ -153,11 +201,18 @@ class ModuleDiscovery:
                 module['release_notes_url'] = self._build_external_docs_url(
                     name, module.get('latest_version'), config
                 )
+            elif source_info['source'] == 'forge_changelog':
+                module['release_notes_url'] = f"https://forge.puppet.com/modules/puppetlabs/{module.get('slug')}/releases"
+            else:
+                module['release_notes_url'] = None
         
         return discovered
     
     def _build_external_docs_url(self, module_name: str, version: str, config: Dict) -> str:
         """Construct external docs URL using config pattern."""
+        if not version:
+            return ''
+
         url_pattern = config.get('url_pattern', '')
         base_url = config.get('base_url', '')
         

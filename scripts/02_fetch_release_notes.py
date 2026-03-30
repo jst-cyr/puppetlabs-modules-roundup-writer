@@ -18,7 +18,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-from urllib.parse import urljoin
 import re
 
 try:
@@ -39,7 +38,7 @@ class ReleaseNotesFetcher:
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': 'puppetlabs-roundup-bot/1.0'})
     
-    def fetch_from_forge(self, module_slug: str, version: str) -> Optional[Dict]:
+    def fetch_from_forge(self, module_slug: str, version: str, source_url: Optional[str] = None) -> Optional[Dict]:
         """
         Fetch release notes from Puppet Forge changelog tab.
         
@@ -48,7 +47,7 @@ class ReleaseNotesFetcher:
             or None if fetch fails.
         """
         # Construct Forge changelog URL
-        changelog_url = f"{self.FORGE_BASE_URL}/modules/{module_slug}/releases"
+        changelog_url = source_url or f"{self.FORGE_BASE_URL}/modules/{module_slug}/releases"
         
         print(f"Fetching Forge changelog for {module_slug} v{version} from {changelog_url}", file=sys.stderr)
         
@@ -68,10 +67,11 @@ class ReleaseNotesFetcher:
             'source': 'forge_changelog',
             'source_url': changelog_url,
             'html_snapshot_path': None,  # Will be set by caller
-            'parsed_bullets': bullets if bullets else ['See release notes on Puppet Forge']
+            'parsed_bullets': bullets if bullets else ['See release notes on Puppet Forge'],
+            'raw_html': html_content,
         }
     
-    def fetch_from_external_docs(self, module_name: str, version: str, config: Dict) -> Optional[Dict]:
+    def fetch_from_external_docs(self, module_name: str, version: str, docs_url: str) -> Optional[Dict]:
         """
         Fetch release notes from external docs (help.puppet.com).
         
@@ -79,19 +79,6 @@ class ReleaseNotesFetcher:
             Dict with version, release_date, source, source_url, raw_html_path, parsed_bullets
             or None if fetch fails.
         """
-        url_pattern = config.get('url_pattern', '')
-        base_url = config.get('base_url', '')
-        
-        # Build version parameter for URL
-        # e.g., "2.6.0" -> "260", or with version_transform "v221"
-        version_underscore = version.replace('.', '')
-        if 'version_transform' in config:
-            version_underscore = config['version_transform'] + version_underscore
-        
-        # Replace placeholder
-        relative_url = url_pattern.replace('{version_underscore}', version_underscore)
-        docs_url = urljoin(base_url, relative_url)
-        
         print(f"Fetching external docs for {module_name} v{version} from {docs_url}", file=sys.stderr)
         
         try:
@@ -110,7 +97,8 @@ class ReleaseNotesFetcher:
             'source': 'external_docs',
             'source_url': docs_url,
             'html_snapshot_path': None,
-            'parsed_bullets': bullets if bullets else ['See release notes on help.puppet.com']
+            'parsed_bullets': bullets if bullets else ['See release notes on help.puppet.com'],
+            'raw_html': html_content,
         }
     
     def _parse_forge_changelog(self, html: str, version: str) -> List[str]:
@@ -122,17 +110,36 @@ class ReleaseNotesFetcher:
         """
         soup = BeautifulSoup(html, 'html.parser')
         
-        # Placeholder: in production, find version section and extract <li> items
-        bullets = []
-        
-        # Look for any <li> items in the page (rough approximation)
-        list_items = soup.find_all('li')
-        for item in list_items[:5]:  # Take first 5
-            text = item.get_text(strip=True)
-            if text and len(text) > 5:  # Filter out empty/tiny items
-                bullets.append(text)
-        
-        return bullets
+        bullets: List[str] = []
+
+        # Try to find the release heading that contains the target version.
+        heading_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+        version_heading = None
+        version_pattern = re.compile(rf'\b{re.escape(version)}\b')
+
+        for heading in soup.find_all(heading_tags):
+            heading_text = heading.get_text(' ', strip=True)
+            if version_pattern.search(heading_text):
+                version_heading = heading
+                break
+
+        if version_heading is not None:
+            node = version_heading.find_next_sibling()
+            while node is not None and getattr(node, 'name', None) not in heading_tags:
+                for li in node.find_all('li'):
+                    text = self._clean_text(li.get_text(' ', strip=True))
+                    if text:
+                        bullets.append(text)
+                node = node.find_next_sibling()
+
+        # Fallback: take meaningful list items from the page.
+        if not bullets:
+            for li in soup.find_all('li'):
+                text = self._clean_text(li.get_text(' ', strip=True))
+                if text:
+                    bullets.append(text)
+
+        return self._dedupe_and_limit(bullets, limit=5)
     
     def _parse_external_docs(self, html: str) -> List[str]:
         """
@@ -143,17 +150,45 @@ class ReleaseNotesFetcher:
         """
         soup = BeautifulSoup(html, 'html.parser')
         
-        # Placeholder: in production, find release notes section and extract bullets
-        bullets = []
-        
-        # Look for <li> items in main content area
-        list_items = soup.find_all('li')
-        for item in list_items[:5]:
-            text = item.get_text(strip=True)
-            if text and len(text) > 5:
+        bullets: List[str] = []
+
+        # Prefer semantic content containers if present.
+        content_root = (
+            soup.find('main')
+            or soup.find('article')
+            or soup.find('div', attrs={'role': 'main'})
+            or soup
+        )
+
+        for li in content_root.find_all('li'):
+            text = self._clean_text(li.get_text(' ', strip=True))
+            if text:
                 bullets.append(text)
-        
-        return bullets
+
+        return self._dedupe_and_limit(bullets, limit=5)
+
+    def _clean_text(self, text: str) -> str:
+        """Normalize extracted list item text."""
+        cleaned = re.sub(r'\s+', ' ', text or '').strip()
+        if len(cleaned) < 8:
+            return ''
+        if cleaned.lower().startswith('version '):
+            return ''
+        return cleaned
+
+    def _dedupe_and_limit(self, items: List[str], limit: int = 5) -> List[str]:
+        """Deduplicate while preserving order, then limit list size."""
+        seen = set()
+        result: List[str] = []
+        for item in items:
+            key = item.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(item)
+            if len(result) >= limit:
+                break
+        return result
     
     def save_html_snapshot(self, module_name: str, version: str, html_content: str, snapshot_dir: Path) -> Path:
         """Save raw HTML snapshot for audit trail."""
@@ -207,6 +242,7 @@ def main():
     # Fetch release notes for each module
     fetcher = ReleaseNotesFetcher()
     release_notes = []
+    snapshot_dir = Path(args.snapshot_dir)
     
     for module_info in modules:
         module_name = module_info.get('name', '')
@@ -214,26 +250,42 @@ def main():
         version = module_info.get('latest_version', '')
         release_date = module_info.get('release_date', '')
         source = module_info.get('release_notes_source', 'forge_changelog')
+        source_url = module_info.get('release_notes_url')
         
         print(f"\nProcessing {module_name} v{version}...", file=sys.stderr)
         
         # Fetch based on source type
         if source == 'external_docs':
-            # TODO: Load config to get external docs info
-            release_info = fetcher.fetch_from_external_docs(
-                module_name, version, {'base_url': '', 'url_pattern': ''}
-            )
+            if not source_url:
+                print(f"WARNING: Missing external docs URL for {module_name}; skipping", file=sys.stderr)
+                continue
+            release_info = fetcher.fetch_from_external_docs(module_name, version, source_url)
+        elif source == 'manual_review':
+            release_info = {
+                'source': 'manual_review',
+                'source_url': None,
+                'html_snapshot_path': None,
+                'parsed_bullets': ['Manual curator review required for this module.'],
+                'raw_html': None,
+            }
         else:
-            release_info = fetcher.fetch_from_forge(module_slug, version)
+            release_info = fetcher.fetch_from_forge(module_slug, version, source_url=source_url)
         
         if release_info:
+            raw_html = release_info.pop('raw_html', None)
+            html_snapshot_path = None
+            if raw_html:
+                snapshot_path = fetcher.save_html_snapshot(module_name, version, raw_html, snapshot_dir)
+                html_snapshot_path = str(snapshot_path)
+
             # Add module metadata
             entry = {
                 'name': module_name,
                 'slug': module_slug,
                 'version': version,
                 'release_date': release_date,
-                **release_info
+                **release_info,
+                'html_snapshot_path': html_snapshot_path,
             }
             release_notes.append(entry)
     

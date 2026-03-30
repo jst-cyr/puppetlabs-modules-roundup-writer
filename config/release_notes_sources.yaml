@@ -49,7 +49,8 @@ forge_changelog:
   - zone_core
   - influxdb
 
-# Modules with custom external documentation sources
+# Modules with custom external documentation sources only.
+# If a module is not listed here, it should use default_source.
 external_docs:
   # Security Compliance Enforcement for Linux
   # Forge changelog links to versioned docs
@@ -86,12 +87,9 @@ external_docs:
     base_url: "https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/"
     url_pattern: "release_notes.htm"
     
-  # Observability Data Connector (formerly puppet_data_connector)
-  puppet_data_connector:
-    type: "forge_changelog"  # Has Forge changelog, use that
-    
-  puppet_operational_dashboards:
-    type: "forge_changelog"
+  # NOTE:
+  # puppet_data_connector and puppet_operational_dashboards use Forge changelog.
+  # They are intentionally omitted here so they use default_source.
 
 # Modules requiring manual curator review
 # (e.g., complex release notes, multiple sources, or judgment calls needed)
