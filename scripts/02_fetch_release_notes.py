@@ -105,10 +105,27 @@ class ReleaseNotesFetcher:
         """
         Parse Forge changelog HTML for a specific version.
         
-        TODO: Extract bullet points for the given version from the changelog.
         Returns first 5 bullets as list of strings.
         """
         soup = BeautifulSoup(html, 'html.parser')
+
+        # Preferred path: parse release changelog markdown from Next.js payload.
+        next_data = soup.find('script', id='__NEXT_DATA__')
+        if next_data and next_data.string:
+            try:
+                payload = json.loads(next_data.string)
+                changelog = (
+                    payload.get('props', {})
+                    .get('pageProps', {})
+                    .get('release', {})
+                    .get('changelog')
+                )
+                if isinstance(changelog, str) and changelog.strip():
+                    markdown_bullets = self._extract_markdown_bullets_for_version(changelog, version)
+                    if markdown_bullets:
+                        return markdown_bullets
+            except (json.JSONDecodeError, TypeError):
+                pass
         
         bullets: List[str] = []
 
@@ -138,6 +155,35 @@ class ReleaseNotesFetcher:
                 text = self._clean_text(li.get_text(' ', strip=True))
                 if text:
                     bullets.append(text)
+
+        return self._dedupe_and_limit(bullets, limit=5)
+
+    def _extract_markdown_bullets_for_version(self, changelog: str, version: str) -> List[str]:
+        """Extract bullets from the markdown section for the requested version."""
+        lines = changelog.splitlines()
+        section_lines: List[str] = []
+        section_pattern = re.compile(rf'^##\s+.*\b(?:v)?{re.escape(version)}\b', re.IGNORECASE)
+
+        in_section = False
+        for line in lines:
+            if line.startswith('## '):
+                if in_section:
+                    break
+                if section_pattern.search(line):
+                    in_section = True
+                    continue
+
+            if in_section:
+                section_lines.append(line)
+
+        bullets: List[str] = []
+        for line in section_lines:
+            stripped = line.strip()
+            if stripped.startswith('- ') or stripped.startswith('* '):
+                bullet = re.sub(r'^[-*]\s+', '', stripped)
+                cleaned = self._clean_text(bullet)
+                if cleaned:
+                    bullets.append(cleaned)
 
         return self._dedupe_and_limit(bullets, limit=5)
     
