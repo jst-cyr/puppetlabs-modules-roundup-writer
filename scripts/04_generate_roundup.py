@@ -5,7 +5,7 @@ Write final roundup post from curated highlights and release notes.
 
 Usage:
     python scripts/04_generate_roundup.py --highlights data/march_2026_highlights_candidates.yaml --release-notes data/march_2026_release_notes_raw.json
-    python scripts/04_generate_roundup.py --highlights data/march_2026_highlights_candidates.yaml --release-notes data/march_2026_release_notes_raw.json --output posts/2026-03\ March\ 2026\ Puppetlabs\ Modules\ Roundup.md
+    python scripts/04_generate_roundup.py --highlights data/march_2026_highlights_candidates.yaml --release-notes data/march_2026_release_notes_raw.json --output "posts/2026-03 March 2026 Puppetlabs Modules Roundup.md"
 
 Output:
     - posts/YYYY-MM Month Year Puppetlabs Modules Roundup.md

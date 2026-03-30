@@ -138,7 +138,12 @@ class ModuleDiscovery:
         )
 
         for link in soup.find_all('a', href=module_link_pattern):
-            href = link.get('href', '')
+            href_value = link.get('href', '')
+            if isinstance(href_value, list):
+                href = href_value[0] if href_value else ''
+            else:
+                href = href_value or ''
+
             slug = href.rsplit('/', 1)[-1]
             if not slug or slug in seen_slugs:
                 continue
