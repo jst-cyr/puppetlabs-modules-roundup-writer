@@ -239,21 +239,27 @@ class ModuleDiscovery:
     
     def enrich_with_sources(self, discovered: Dict) -> Dict:
         """Add release_notes_source info to each module."""
+        source_counts: Dict[str, int] = {}
+
         for module in discovered.get('modules', []):
             name = module.get('slug', module.get('name', '')).lower()
             source_info = self.get_release_notes_source(name)
-            module['release_notes_source'] = source_info['source']
+            assigned_source = source_info['source']
+            module['release_notes_source'] = assigned_source
+            source_counts[assigned_source] = source_counts.get(assigned_source, 0) + 1
             
-            if source_info['source'] == 'external_docs':
+            if assigned_source == 'external_docs':
                 # Construct release notes URL from config
                 config = source_info.get('config', {})
                 module['release_notes_url'] = self._build_external_docs_url(
                     name, module.get('latest_version'), config
                 )
-            elif source_info['source'] == 'forge_changelog':
+            elif assigned_source == 'forge_changelog':
                 module['release_notes_url'] = f"https://forge.puppet.com/modules/puppetlabs/{module.get('slug')}/releases"
             else:
                 module['release_notes_url'] = None
+
+        discovered.setdefault('metadata', {})['source_summary'] = source_counts
         
         return discovered
     
