@@ -251,6 +251,14 @@ class RoundupGenerator:
     def _strip_attribution(self, bullet: str) -> str:
         """Trim trailing contributor attribution and excess whitespace from a changelog bullet."""
         bullet = self._plain_text(bullet)
+        # Remove leading ticket IDs so summaries read naturally.
+        ticket_prefix_patterns = [
+            r'^\s*\([A-Z][A-Z0-9_]*-\d+\)\s*',
+            r'^\s*[A-Z][A-Z0-9_]*-\d+\s*[:\-]?\s*',
+        ]
+        for pattern in ticket_prefix_patterns:
+            bullet = re.sub(pattern, '', bullet)
+
         # Remove common trailing PR attribution patterns after link text is flattened.
         attribution_patterns = [
             r'\s*\(#\d+\)\s*$',
