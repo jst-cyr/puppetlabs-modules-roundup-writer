@@ -209,7 +209,12 @@ class RoundupGenerator:
 
             forge_url = module.get('forge_url') or f"https://forge.puppet.com/modules/puppetlabs/{slug}"
             summary = self._summarize_module(module)
-            bullet_lines = [f"- {bullet}" for bullet in bullets[:5] if bullet]
+            # For modules sourced from official external docs, keep the entry concise:
+            # summary + external release notes link, without repeating parsed bullets.
+            if module.get('source') == 'external_docs':
+                bullet_lines = []
+            else:
+                bullet_lines = [f"- {bullet}" for bullet in bullets[:5] if bullet]
             optional_line = self._optional_release_notes_line(module)
 
             entry_lines = [
@@ -242,6 +247,9 @@ class RoundupGenerator:
             return f"{name} received a maintenance update this month."
 
         first_bullet = self._strip_attribution(bullets[0]).rstrip('.')
+        if module.get('source') == 'external_docs':
+            return f"This release focuses on {first_bullet[:1].lower() + first_bullet[1:]}."
+
         if len(bullets) == 1:
             return f"This release focuses on {first_bullet[:1].lower() + first_bullet[1:]}."
 
