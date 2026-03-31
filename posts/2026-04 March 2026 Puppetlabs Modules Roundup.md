@@ -19,7 +19,7 @@ March releases leaned toward version-alignment work, with updates for newer Pupp
 
 Several releases focused on making "Day Two" operations safer and easier to debug through better validation, more useful logging, and targeted runtime fixes.
 
-- Added installer `untar` checks and deduplicated hosts in the legacy compiler group.
+- Added installer untar checks and deduplicated hosts in the legacy compiler group.
 - Moved most SCE-specific logging into the Puppet agent run log for easier debugging.
 
 ## What Updates Happened to Puppetlabs Modules in March 2026?
@@ -43,7 +43,7 @@ This release focuses on updated puppetlabs-docker and puppetlabs-hocon dependenc
 
 📅 Latest release: 2026-03-25 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/peadm))
 
-This release focuses on adding support for PE 2023.8.9 and 2025.9.0 #657 (Jade2153) while also addressing (PE-43572) deduplicate hosts in legacy compiler group #658 (davidmalloncares).
+This release focuses on adding support for PE 2023.8.9 and 2025.9.0 while also addressing deduplicate hosts in legacy compiler group.
 
 - Adding support for PE 2023.8.9 and 2025.9.0 [#657](https://github.com/puppetlabs/puppetlabs-peadm/pull/657) ([Jade2153](https://github.com/Jade2153))
 - (PE-43572) deduplicate hosts in legacy compiler group [#658](https://github.com/puppetlabs/puppetlabs-peadm/pull/658) ([davidmalloncares](https://github.com/davidmalloncares))
@@ -71,7 +71,7 @@ This release focuses on support for Ubuntu 24.04. You can use SCE to enforce the
 
 📅 Latest release: 2026-03-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/sqlserver))
 
-This release focuses on (MODULES-11613) Set permission variable in permission sql EPP #500 (shubhamshinde360).
+This release focuses on set permission variable in permission sql EPP.
 
 - (MODULES-11613) Set permission variable in permission sql EPP [#500](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/500) ([shubhamshinde360](https://github.com/shubhamshinde360))
 
