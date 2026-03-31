@@ -65,13 +65,13 @@ This release focuses on support for Ubuntu 24.04. You can use Security Complianc
 
 📅 Latest release: 2026-03-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/sqlserver))
 
-This release focuses on set permission variable in permission sql EPP.
+Small change this month to ensure permission the variable is set.
 
 - (MODULES-11613) Set permission variable in permission sql EPP [#500](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/500) ([shubhamshinde360](https://github.com/shubhamshinde360))
 
 ## Until Next Time!
 
-That wraps up the March 2026 roundup. If any of peadm, sce_linux intersect with your environment, the linked Forge pages and release notes are worth a closer look.
+That wraps up the March 2026 roundup. If any of the modules overlap with your environment, the linked Forge pages and release notes are worth a closer look.
 
 Feedback on the series is always useful, especially if there are module families or release-note patterns that deserve more attention in future editions.
 
