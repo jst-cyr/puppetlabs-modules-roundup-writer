@@ -2,9 +2,9 @@
 
 **Tags:** #puppet
 
-March 2026 brought 4 Puppetlabs module releases in the Puppetlabs Forge catalog, and this roundup pulls the most important changes into one place.
+March 2026 brought 4 Puppetlabs module releases in the Puppetlabs Forge catalog. Read along to see what changed this month!
 
-Across the month, the clearest themes were compatibility updates across pe and supported platforms and operational hardening and troubleshooting improvements, so the summary below focuses on support changes, maintenance work, and operational impact.
+Across the month, the clearest themes were compatibility updates across Puppet Enterprise (PE), supported platforms, and operational hardening and troubleshooting improvements.
 
 ## Highlighted Updates
 
@@ -17,9 +17,9 @@ March releases leaned toward version-alignment work, with updates for newer Pupp
 
 ### Operational hardening and troubleshooting improvements
 
-Several releases focused on making day-two operations safer and easier to debug through better validation, more useful logging, and targeted runtime fixes.
+Several releases focused on making "Day Two" operations safer and easier to debug through better validation, more useful logging, and targeted runtime fixes.
 
-- Added installer untar checks and deduplicated hosts in the legacy compiler group.
+- Added installer `untar` checks and deduplicated hosts in the legacy compiler group.
 - Moved most SCE-specific logging into the Puppet agent run log for easier debugging.
 
 ## What Updates Happened to Puppetlabs Modules in March 2026?
