@@ -79,9 +79,12 @@ This release addresses two bug fixes. A race condition where `lvcreate` returns 
 
 📅 Latest release: 2026-04-09 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/pe_event_forwarding))
 
-This release focuses on see release notes on Puppet Forge.
+This release adds orchestrator plan-job collection controls and fixes duplicate forwarding behavior in job collection.
 
-- See release notes on Puppet Forge
+- Added plan job data collection from the `orchestrator/v1/plan_jobs` API, with progress tracked in a dedicated `pe_event_forwarding_plan_index.yaml` state file.
+- Added the `pe_event_forwarding::skip_plans` parameter to disable plan job collection when needed.
+- Fixed `get_jobs` behavior where the first page could return more records than newly available jobs, which could cause duplicate forwarded data.
+- Source attribution: [(PIE-1683) Add support for collecting plan data #137](https://github.com/puppetlabs/puppetlabs-pe_event_forwarding/pull/137) ([coreymbe](https://github.com/coreymbe)).
 
 ---
 
