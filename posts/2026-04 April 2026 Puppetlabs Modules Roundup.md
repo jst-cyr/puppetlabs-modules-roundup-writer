@@ -46,7 +46,7 @@ Check the official [release notes for cd4peadm 5.15.0](https://help.puppet.com/c
 
 A few highlights from this release:
 - Fixed a stale image which resulted in checksum and benchmark issues upon install.
-- 2 CVEs addressed.
+- **CVE-2026-33815, CVE-2026-33816.** Updated gorm.io to v5.9.2 to address these vulnerabilities.
 
 Check the official [release notes for comply 3.7.1](https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/release_notes.htm) for the full details.
 
@@ -58,7 +58,7 @@ Check the official [release notes for comply 3.7.1](https://help.puppet.com/scm/
 
 A few highlights from this release:
 - Fixed a stale image which resulted in checksum and benchmark issues upon install.
-- 2 CVEs addressed.
+- **CVE-2026-33815, CVE-2026-33816.** Updated gorm.io to v5.9.2 to address these vulnerabilities.
 
 Check the official [release notes for complyadm 3.7.1](https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/release_notes.htm) for the full details.
 

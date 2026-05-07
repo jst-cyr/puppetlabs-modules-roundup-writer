@@ -348,10 +348,10 @@ class RoundupGenerator:
                     break
 
         # CVE handling is always last.
-        # When there are 3 or fewer CVEs and no other content, list the CVE bullets
-        # directly so readers see the specifics rather than a vague count.
+        # When there are 3 or fewer CVEs, list the CVE bullets directly so readers
+        # see the specifics rather than a vague count.
         if cve_count > 0:
-            if cve_count <= 3 and not non_security_bullets:
+            if cve_count <= 3:
                 selected.extend(security_bullets[:cve_count])
             else:
                 noun = 'CVE' if cve_count == 1 else 'CVEs'
