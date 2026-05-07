@@ -112,7 +112,7 @@ Check the official [release notes for sce_linux 2.6.1](https://help.puppet.com/s
 
 📅 Latest release: 2026-04-09 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/splunk_hec))
 
-This release focuses on added support for the `orchestrator_plan` event type from the **puppetlabs-pe_event_forwarding** module while also addressing added `orchestrator_plan` to index mappings in util_splunk_hec template.
+This release focuses on support for the `orchestrator_plan` event type from the **puppetlabs-pe_event_forwarding** module while also addressing `orchestrator_plan` to index mappings in util_splunk_hec template.
 
 - Added support for the `orchestrator_plan` event type from the **puppetlabs-pe_event_forwarding** module.
 - Added `orchestrator_plan` to index mappings in util_splunk_hec template.
