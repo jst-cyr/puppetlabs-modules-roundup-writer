@@ -89,7 +89,7 @@ This release focuses on see release notes on Puppet Forge.
 
 📅 Latest release: 2026-04-01 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/peadm))
 
-This release focuses on add support for PE 2025.10.0.
+This release is a small change to add support for Puppet Enterprise 2025.10.0.
 
 - (PE-43654) Add support for PE 2025.10.0 [#661](https://github.com/puppetlabs/puppetlabs-peadm/pull/661) ([davidmalloncares](https://github.com/davidmalloncares))
 
