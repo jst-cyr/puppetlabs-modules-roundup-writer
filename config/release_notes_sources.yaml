@@ -53,37 +53,42 @@ forge_changelog:
 # If a module is not listed here, it should use default_source.
 external_docs:
   # Security Compliance Enforcement for Linux
-  # Forge changelog links to versioned docs
+  # help.puppet.com versioned docs (MadCap Flare HTML)
   sce_linux:
-    type: "help_puppet_versioned"
+    doc_type: "help_puppet_madcap"
+    parser_type: "madcap_flare"
     base_url: "https://help.puppet.com/sce/current/linux/"
     url_pattern: "scel_relnotes_{version_underscore}.htm"
     # e.g., version 2.6.0 becomes 260 in URL: scel_relnotes_260.htm
     
   # Security Compliance Enforcement for Windows
   sce_windows:
-    type: "help_puppet_versioned"
+    doc_type: "help_puppet_madcap"
+    parser_type: "madcap_flare"
     base_url: "https://help.puppet.com/sce/current/windows/"
     url_pattern: "scew_relnotes_{version_underscore}.htm"
     # e.g., version 2.2.1 becomes v221 in URL: scew_relnotes_v221.htm
     version_transform: "v"  # prepend 'v' to underscore version
     
   # Continuous Delivery Modules
-  # Forge changelog links to central docs (NOT version-specific in URL)
+  # help.puppet.com fixed URL docs (MadCap Flare HTML)
   cd4peadm:
-    type: "help_puppet_fixed"
+    doc_type: "help_puppet_madcap"
+    parser_type: "madcap_flare"
     base_url: "https://help.puppet.com/cdpe/current/Content/UserGuide/CDPE/ReleaseNotes/"
     url_pattern: "cd_release_notes.htm"
     note: "Not version-specific; always points to current docs"
     
-  # Compliance Modules
+  # Compliance Modules (MadCap Flare HTML)
   comply:
-    type: "help_puppet_fixed"
+    doc_type: "help_puppet_madcap"
+    parser_type: "madcap_flare"
     base_url: "https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/"
     url_pattern: "release_notes.htm"
     
   complyadm:
-    type: "help_puppet_fixed"
+    doc_type: "help_puppet_madcap"
+    parser_type: "madcap_flare"
     base_url: "https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/"
     url_pattern: "release_notes.htm"
     

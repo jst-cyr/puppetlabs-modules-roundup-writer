@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 import re
+import yaml
 
 try:
     import requests
@@ -34,9 +35,13 @@ class ReleaseNotesFetcher:
     
     FORGE_BASE_URL = "https://forge.puppet.com"
     
-    def __init__(self):
+    def __init__(self, config_path: Optional[Path] = None):
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': 'puppetlabs-roundup-bot/1.0'})
+        self.config = {}
+        if config_path and config_path.exists():
+            with open(config_path, 'r') as f:
+                self.config = yaml.safe_load(f) or {}
     
     def fetch_from_forge(self, module_slug: str, version: str, source_url: Optional[str] = None) -> Optional[Dict]:
         """
@@ -71,9 +76,15 @@ class ReleaseNotesFetcher:
             'raw_html': html_content,
         }
     
-    def fetch_from_external_docs(self, module_name: str, version: str, docs_url: str) -> Optional[Dict]:
+    def fetch_from_external_docs(self, module_name: str, version: str, docs_url: str, parser_type: Optional[str] = None) -> Optional[Dict]:
         """
         Fetch release notes from external docs (help.puppet.com).
+        
+        Args:
+            module_name: Name of the module
+            version: Version number
+            docs_url: URL to fetch from
+            parser_type: Type of parser to use ('madcap_flare', 'help_puppet_html', etc.)
         
         Returns:
             Dict with version, release_date, source, source_url, raw_html_path, parsed_bullets
@@ -90,8 +101,11 @@ class ReleaseNotesFetcher:
         
         html_content = response.text
         
-        # Parse HTML to extract bullets (varies by doc layout)
-        bullets = self._parse_external_docs(html_content)
+        # Parse HTML to extract bullets based on parser type
+        if parser_type == 'madcap_flare':
+            bullets = self._parse_madcap_flare(html_content)
+        else:
+            bullets = self._parse_external_docs(html_content)
         
         return {
             'source': 'external_docs',
@@ -213,6 +227,111 @@ class ReleaseNotesFetcher:
 
         return self._dedupe_and_limit(bullets, limit=5)
 
+    def _parse_madcap_flare(self, html: str) -> List[str]:
+        """
+        Parse MadCap Flare HTML (help.puppet.com) for release notes.
+        
+        MadCap Flare pages have:
+        - Navigation TOC with version links
+        - Main content in div[data-mc-content-body="True"]
+        - Real content as <li><p> or <li> with descriptions
+        
+        Strategy:
+        1. Find main content container
+        2. Extract <li> elements with actual content (have <p> tags or substantial text)
+        3. Filter out pure navigation items (version selectors, breadcrumbs)
+        4. Return up to 5 items
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+        bullets: List[str] = []
+        
+        # Try to find main content container specific to MadCap Flare
+        content_container = soup.find('div', attrs={'data-mc-content-body': 'True'})
+        if not content_container:
+            # Fallback to common content containers
+            content_container = (
+                soup.find('main')
+                or soup.find('article')
+                or soup.find('div', attrs={'role': 'main'})
+                or soup
+            )
+        
+        # Find actual content lists (skip TOC-style lists with just links)
+        for li in content_container.find_all('li'):
+            text = self._clean_madcap_text(li)
+            if text and self._is_content_item(text):
+                bullets.append(text)
+        
+        return self._dedupe_and_limit(bullets, limit=5)
+
+    def _clean_madcap_text(self, li_element) -> str:
+        """
+        Extract and clean text from a MadCap Flare <li> element.
+        
+        Handles <li><p>text</p></li>, <li>text</li>, nested markup, etc.
+        """
+        # Try to get text from nested <p> first (most common in MadCap)
+        p_tag = li_element.find('p')
+        if p_tag:
+            text = p_tag.get_text(' ', strip=True)
+        else:
+            text = li_element.get_text(' ', strip=True)
+        
+        # Clean up whitespace
+        text = re.sub(r'\s+', ' ', text or '').strip()
+        
+        return text
+    
+    def _is_content_item(self, text: str) -> bool:
+        """
+        Determine if text is actual release note content vs navigation.
+        
+        Filters out:
+        - Concatenated versions: "Version 3.7.1 Version 3.7.0..."
+        - Single version numbers
+        - Pure product/module names
+        - Navigation headers
+        - Release notes TOC pages (product name repeated with versions)
+        - Very short items
+        """
+        if len(text) < 10:
+            return False
+        
+        # Concatenated versions anywhere in text: "Version X.Y.Z"
+        if re.search(r'Version\s+\d+\.\d+\.\d+', text):
+            # But only if it's mostly versions (allow some description before)
+            version_count = len(re.findall(r'Version\s+\d+\.\d+\.\d+', text))
+            if version_count > 1 or (version_count == 1 and text.strip().startswith('Version')):
+                return False
+        
+        # Single version number
+        if re.match(r'^(?:Version\s+)?\d+\.\d+(?:\.\d+)?$', text):
+            return False
+        
+        # Pure product/module names (common navigation items)
+        nav_items = [
+            'Security Compliance Management',
+            'Continuous Delivery',
+            'release notes',
+        ]
+        for item in nav_items:
+            # Match if it's the item by itself or item followed by just a version
+            if re.match(rf'^{re.escape(item)}(?:\s+\d+\.\d+(?:\.\d+)?)?$', text):
+                return False
+        
+        # Patterns that are clearly navigation (all versions/product names)
+        if re.match(r'^(?:Security Compliance Management|Continuous Delivery)\s+\d+\.\d+', text):
+            return False
+        
+        # Release notes TOC: "ProductName release notes ProductName X.Y ProductName X.Y..."
+        # Check if it starts with product name + "release notes" then repeats product+version
+        if re.search(r'(Security Compliance Management|Continuous Delivery)\s+release\s+notes', text):
+            # This is a TOC/nav page
+            if re.search(r'(Security Compliance Management|Continuous Delivery)\s+\d+\.\d+', text):
+                return False
+        
+        return True
+
     def _clean_text(self, text: str) -> str:
         """Normalize extracted list item text."""
         cleaned = re.sub(r'\s+', ' ', text or '').strip()
@@ -270,6 +389,11 @@ def main():
         default='data/raw_html',
         help='Directory to store raw HTML snapshots'
     )
+    parser.add_argument(
+        '--config',
+        default='config/release_notes_sources.yaml',
+        help='Path to release notes configuration file'
+    )
     
     args = parser.parse_args()
     
@@ -285,8 +409,10 @@ def main():
     modules = discovered.get('modules', [])
     print(f"Fetching release notes for {len(modules)} modules...", file=sys.stderr)
     
-    # Fetch release notes for each module
-    fetcher = ReleaseNotesFetcher()
+    # Create fetcher with config
+    config_path = Path(args.config)
+    fetcher = ReleaseNotesFetcher(config_path)
+    
     release_notes = []
     snapshot_dir = Path(args.snapshot_dir)
     
@@ -305,7 +431,13 @@ def main():
             if not source_url:
                 print(f"WARNING: Missing external docs URL for {module_name}; skipping", file=sys.stderr)
                 continue
-            release_info = fetcher.fetch_from_external_docs(module_name, version, source_url)
+            # Get parser type from config
+            parser_type = None
+            external_docs_config = fetcher.config.get('external_docs', {})
+            module_config = external_docs_config.get(module_name, {})
+            if module_config:
+                parser_type = module_config.get('parser_type')
+            release_info = fetcher.fetch_from_external_docs(module_name, version, source_url, parser_type=parser_type)
         elif source == 'manual_review':
             release_info = {
                 'source': 'manual_review',
