@@ -68,7 +68,7 @@ Check the official [release notes for complyadm 3.7.1](https://help.puppet.com/s
 
 📅 Latest release: 2026-04-30 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/lvm))
 
-This release focuses on wait for udev to settle after lvcreate while also addressing pass converted boolean parameter.
+This release addresses two bug fixes. A race condition where `lvcreate` returns before udev finishes processing device-add events could cause a subsequent `filesystem` resource targeting the same logical volume to fail with "device or resource busy" — the fix calls `udevadm settle` after a successful `lvcreate`. The release also corrects an AIX-specific issue where boolean filesystem parameters such as `isnapshot` were passed to `crfs` as `true`/`false` instead of the required `yes`/`no`, causing the command to reject them outright.
 
 - (MODULES-11756) Wait for udev to settle after lvcreate [#380](https://github.com/puppetlabs/puppetlabs-lvm/pull/380) ([imaqsood](https://github.com/imaqsood))
 - (MODULES-11788) Pass converted boolean parameter [#379](https://github.com/puppetlabs/puppetlabs-lvm/pull/379) ([joshcooper](https://github.com/joshcooper))
