@@ -63,22 +63,29 @@ class GitHubCopilotHighlightsExtractor:
         # Create task description for agent
         task_description = self._create_agent_task(release_notes_text)
         
-        # Write task to temp file for agent to read
+        # Write task to temp file for compatibility, then always clean it up.
         task_file = Path('/tmp/stage3_analysis_task.txt') if not sys.platform.startswith('win') else Path('temp_stage3_task.txt')
-        with open(task_file, 'w') as f:
-            f.write(task_description)
-        
-        print(f"\n📋 Task written to: {task_file}", file=sys.stderr)
-        print("Opening GitHub Copilot chat interface...", file=sys.stderr)
-        print("\n⚠️  NEXT STEPS:", file=sys.stderr)
-        print("1. GitHub Copilot agent browser tab should open", file=sys.stderr)
-        print("2. Paste the following prompt into the Copilot chat:", file=sys.stderr)
-        print("\n" + "="*80, file=sys.stderr)
-        print(task_description, file=sys.stderr)
-        print("="*80 + "\n", file=sys.stderr)
-        print("3. Copy the YAML response from Copilot", file=sys.stderr)
-        print("4. Save it to: " + self._get_default_output_path(release_notes_data), file=sys.stderr)
-        print("\nAlternatively, run this script with --agent-mode to invoke agent programmatically", file=sys.stderr)
+        try:
+            with open(task_file, 'w', encoding='utf-8') as f:
+                f.write(task_description)
+
+            print(f"\n📋 Task written to: {task_file}", file=sys.stderr)
+            print("Opening GitHub Copilot chat interface...", file=sys.stderr)
+            print("\n⚠️  NEXT STEPS:", file=sys.stderr)
+            print("1. GitHub Copilot agent browser tab should open", file=sys.stderr)
+            print("2. Paste the following prompt into the Copilot chat:", file=sys.stderr)
+            print("\n" + "="*80, file=sys.stderr)
+            print(task_description, file=sys.stderr)
+            print("="*80 + "\n", file=sys.stderr)
+            print("3. Copy the YAML response from Copilot", file=sys.stderr)
+            print("4. Save it to: " + self._get_default_output_path(release_notes_data), file=sys.stderr)
+            print("\nAlternatively, run this script with --agent-mode to invoke agent programmatically", file=sys.stderr)
+        finally:
+            if task_file.exists():
+                try:
+                    task_file.unlink()
+                except OSError:
+                    print(f"WARNING: Could not remove temporary file: {task_file}", file=sys.stderr)
         
         # Return empty for now - user will manually copy results
         return self._get_empty_highlights()
