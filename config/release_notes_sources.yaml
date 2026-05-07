@@ -71,13 +71,14 @@ external_docs:
     version_transform: "v"  # prepend 'v' to underscore version
     
   # Continuous Delivery Modules
-  # help.puppet.com fixed URL docs (MadCap Flare HTML)
+  # help.puppet.com versioned anchor docs (MadCap Flare HTML)
   cd4peadm:
     doc_type: "help_puppet_madcap"
     parser_type: "madcap_flare"
     base_url: "https://help.puppet.com/cdpe/current/Content/UserGuide/CDPE/ReleaseNotes/"
     url_pattern: "cd_release_notes.htm"
-    note: "Not version-specific; always points to current docs"
+    version_anchor: true  # Append #VersionXYZ anchor based on version (e.g., 5.15.0 -> #Version5150)
+    note: "Uses version-specific anchor for detailed release notes"
     
   # Compliance Modules (MadCap Flare HTML)
   comply:

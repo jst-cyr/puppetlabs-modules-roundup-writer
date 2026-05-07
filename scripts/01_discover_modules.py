@@ -286,7 +286,15 @@ class ModuleDiscovery:
             transform = config['version_transform']
             url = url_pattern.replace('{version_underscore}', transform + version_underscore)
         
-        return urljoin(base_url, url)
+        full_url = urljoin(base_url, url)
+        
+        # Check for version_anchor flag to append anchor to URL
+        # e.g., 5.15.0 -> #Version5150
+        if config.get('version_anchor', False):
+            version_anchor = f"Version{version_underscore}"
+            full_url = f"{full_url}#{version_anchor}"
+        
+        return full_url
 
 
 def main():

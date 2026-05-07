@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 import re
+from urllib.parse import urldefrag
 import yaml
 
 try:
@@ -91,19 +92,20 @@ class ReleaseNotesFetcher:
             or None if fetch fails.
         """
         print(f"Fetching external docs for {module_name} v{version} from {docs_url}", file=sys.stderr)
+        fetch_url, anchor = urldefrag(docs_url)
         
         try:
-            response = self.session.get(docs_url, timeout=10)
+            response = self.session.get(fetch_url, timeout=10)
             response.raise_for_status()
         except requests.RequestException as e:
-            print(f"ERROR: Failed to fetch {docs_url}: {e}", file=sys.stderr)
+            print(f"ERROR: Failed to fetch {fetch_url}: {e}", file=sys.stderr)
             return None
         
         html_content = response.text
         
         # Parse HTML to extract bullets based on parser type
         if parser_type == 'madcap_flare':
-            bullets = self._parse_madcap_flare(html_content)
+            bullets = self._parse_madcap_flare(html_content, anchor=anchor)
         else:
             bullets = self._parse_external_docs(html_content)
         
@@ -227,7 +229,7 @@ class ReleaseNotesFetcher:
 
         return self._dedupe_and_limit(bullets, limit=5)
 
-    def _parse_madcap_flare(self, html: str) -> List[str]:
+    def _parse_madcap_flare(self, html: str, anchor: str = '') -> List[str]:
         """
         Parse MadCap Flare HTML (help.puppet.com) for release notes.
         
@@ -256,13 +258,48 @@ class ReleaseNotesFetcher:
                 or soup
             )
         
+        search_root = self._find_anchor_section_root(content_container, anchor)
+
         # Find actual content lists (skip TOC-style lists with just links)
-        for li in content_container.find_all('li'):
+        for li in search_root.find_all('li'):
             text = self._clean_madcap_text(li)
             if text and self._is_content_item(text):
                 bullets.append(text)
         
         return self._dedupe_and_limit(bullets, limit=5)
+
+    def _find_anchor_section_root(self, content_container, anchor: str):
+        """Return a scoped root for an anchor section when available."""
+        if not anchor:
+            return content_container
+
+        anchor_target = (
+            content_container.find(attrs={'id': anchor})
+            or content_container.find('a', attrs={'name': anchor})
+        )
+        if not anchor_target:
+            return content_container
+
+        section_nodes = []
+        heading_tags = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}
+
+        node = anchor_target
+        while node is not None:
+            section_nodes.append(node)
+            node = node.find_next_sibling()
+            if node is not None and getattr(node, 'name', None) in heading_tags:
+                break
+
+        if len(section_nodes) <= 1:
+            parent_block = anchor_target.find_parent(['section', 'article', 'div'])
+            return parent_block or content_container
+
+        scoped_soup = BeautifulSoup('', 'html.parser')
+        wrapper = scoped_soup.new_tag('div')
+        for section_node in section_nodes:
+            wrapper.append(section_node)
+        scoped_soup.append(wrapper)
+        return scoped_soup
 
     def _clean_madcap_text(self, li_element) -> str:
         """
