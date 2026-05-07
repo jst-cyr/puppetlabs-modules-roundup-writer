@@ -208,12 +208,11 @@ class RoundupGenerator:
                 continue
 
             forge_url = module.get('forge_url') or f"https://forge.puppet.com/modules/puppetlabs/{slug}"
-            summary = self._summarize_module(module)
-            # For modules sourced from official external docs, keep the entry concise:
-            # summary + external release notes link, without repeating parsed bullets.
             if module.get('source') == 'external_docs':
+                summary = self._build_external_summary_block(module)
                 bullet_lines = []
             else:
+                summary = self._summarize_module(module)
                 bullet_lines = [f"- {bullet}" for bullet in bullets[:5] if bullet]
             optional_line = self._optional_release_notes_line(module)
 
@@ -256,16 +255,122 @@ class RoundupGenerator:
         second_bullet = self._strip_attribution(bullets[1]).rstrip('.')
         return f"This release focuses on {first_bullet[:1].lower() + first_bullet[1:]} while also addressing {second_bullet[:1].lower() + second_bullet[1:]}."
 
+    def _build_external_summary_block(self, module: Dict) -> str:
+        """Create a structured deterministic summary for external docs modules."""
+        raw_bullets = [
+            self._plain_text(bullet).strip()
+            for bullet in module.get('parsed_bullets_full', [])
+            if bullet and bullet.strip()
+        ]
+        if not raw_bullets:
+            raw_bullets = [
+                self._plain_text(bullet).strip()
+                for bullet in module.get('parsed_bullets', [])
+                if bullet and bullet.strip()
+            ]
+
+        cleaned_bullets = [self._strip_attribution(bullet).rstrip('.') for bullet in raw_bullets]
+        highlight_lines = self._select_external_highlights(cleaned_bullets, raw_bullets=raw_bullets)
+        if not highlight_lines:
+            name = module.get('name', 'this module')
+            return f"A few highlights from this release:\n- See official release notes for details for {name}."
+
+        lines = ["A few highlights from this release:"]
+        lines.extend([f"- {item}" for item in highlight_lines])
+        return "\n".join(lines)
+
+    def _select_external_highlights(self, bullets: List[str], raw_bullets: Optional[List[str]] = None) -> List[str]:
+        """Select deterministic external highlights: new/enhanced, fixes, and CVE count."""
+        if not bullets:
+            return []
+
+        normalized = []
+        for bullet in bullets:
+            text = re.sub(r'\s+', ' ', bullet).strip()
+            if text:
+                normalized.append(text)
+
+        seen = set()
+        unique_bullets = []
+        for bullet in normalized:
+            key = bullet.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_bullets.append(bullet)
+
+        cve_source = raw_bullets if raw_bullets else unique_bullets
+        cve_matches = re.findall(r'\bCVE-\d{4}-\d+\b', ' '.join(cve_source), flags=re.IGNORECASE)
+        cve_count = len({match.upper() for match in cve_matches})
+
+        def is_security(text: str) -> bool:
+            low = text.lower()
+            return 'cve-' in low or 'security' in low or 'vulnerab' in low
+
+        def is_fixed(text: str) -> bool:
+            low = text.lower()
+            return any(token in low for token in ['fixed', 'resolved', 'issue', 'error', 'fail'])
+
+        def is_feature(text: str) -> bool:
+            low = text.lower()
+            return any(token in low for token in ['added', 'new', 'enhance', 'improv', 'support', 'introduc', 'updated'])
+
+        security_bullets = [b for b in unique_bullets if is_security(b)]
+        non_security_bullets = [b for b in unique_bullets if not is_security(b)]
+        feature_candidates = [b for b in non_security_bullets if is_feature(b)]
+        fixed_candidates = [b for b in non_security_bullets if is_fixed(b)]
+
+        selected: List[str] = []
+
+        if feature_candidates:
+            selected.append(feature_candidates[0])
+
+        for candidate in feature_candidates[1:] + non_security_bullets:
+            if candidate not in selected:
+                selected.append(candidate)
+            if len(selected) >= 2:
+                break
+
+        fixed_choice = None
+        for candidate in fixed_candidates:
+            if candidate not in selected:
+                fixed_choice = candidate
+                break
+        if fixed_choice:
+            selected.append(fixed_choice)
+
+        # Fill remaining slots from non-security bullets only.
+        if len(selected) < 3:
+            for candidate in non_security_bullets:
+                if candidate not in selected:
+                    selected.append(candidate)
+                if len(selected) >= 3:
+                    break
+
+        # CVE handling is always last.
+        # When there are 3 or fewer CVEs and no other content, list the CVE bullets
+        # directly so readers see the specifics rather than a vague count.
+        if cve_count > 0:
+            if cve_count <= 3 and not non_security_bullets:
+                selected.extend(security_bullets[:cve_count])
+            else:
+                noun = 'CVE' if cve_count == 1 else 'CVEs'
+                selected.append(f"{cve_count} {noun} addressed.")
+
+        return [item.rstrip('.') + '.' for item in selected[:5]]
+
     def _strip_attribution(self, bullet: str) -> str:
         """Trim trailing contributor attribution and excess whitespace from a changelog bullet."""
         bullet = self._plain_text(bullet)
-        # Remove leading ticket IDs so summaries read naturally.
-        ticket_prefix_patterns = [
-            r'^\s*\([A-Z][A-Z0-9_]*-\d+\)\s*',
-            r'^\s*[A-Z][A-Z0-9_]*-\d+\s*[:\-]?\s*',
-        ]
-        for pattern in ticket_prefix_patterns:
-            bullet = re.sub(pattern, '', bullet)
+        # Preserve CVE identifiers for security-related summaries.
+        if not bullet.lstrip().upper().startswith('CVE-'):
+            # Remove leading ticket IDs so summaries read naturally.
+            ticket_prefix_patterns = [
+                r'^\s*\([A-Z][A-Z0-9_]*-\d+\)\s*',
+                r'^\s*[A-Z][A-Z0-9_]*-\d+\s*[:\-]?\s*',
+            ]
+            for pattern in ticket_prefix_patterns:
+                bullet = re.sub(pattern, '', bullet)
 
         # Remove common trailing PR attribution patterns after link text is flattened.
         attribution_patterns = [
@@ -292,7 +397,7 @@ class RoundupGenerator:
         if not source_url:
             return ''
 
-        return f"- Check the official [release notes for {module.get('name')} {version}]({source_url})"
+        return f"Check the official [release notes for {module.get('name')} {version}]({source_url}) for the full details."
 
     def _generate_post(
         self,

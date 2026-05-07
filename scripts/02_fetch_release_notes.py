@@ -105,15 +105,24 @@ class ReleaseNotesFetcher:
         
         # Parse HTML to extract bullets based on parser type
         if parser_type == 'madcap_flare':
-            bullets = self._parse_madcap_flare(html_content, anchor=anchor)
+            full_bullets = self._parse_madcap_flare(
+                html_content,
+                anchor=anchor,
+                version=version,
+                module_name=module_name,
+                limit=None,
+            )
         else:
-            bullets = self._parse_external_docs(html_content)
+            full_bullets = self._parse_external_docs(html_content, limit=None)
+
+        bullets = self._dedupe_and_limit(full_bullets, limit=5)
         
         return {
             'source': 'external_docs',
             'source_url': docs_url,
             'html_snapshot_path': None,
             'parsed_bullets': bullets if bullets else ['See release notes on help.puppet.com'],
+            'parsed_bullets_full': full_bullets,
             'raw_html': html_content,
         }
     
@@ -203,7 +212,7 @@ class ReleaseNotesFetcher:
 
         return self._dedupe_and_limit(bullets, limit=5)
     
-    def _parse_external_docs(self, html: str) -> List[str]:
+    def _parse_external_docs(self, html: str, limit: Optional[int] = 5) -> List[str]:
         """
         Parse external docs (help.puppet.com) HTML for release notes.
         
@@ -227,9 +236,16 @@ class ReleaseNotesFetcher:
             if text:
                 bullets.append(text)
 
-        return self._dedupe_and_limit(bullets, limit=5)
+        return self._dedupe_and_limit(bullets, limit=limit)
 
-    def _parse_madcap_flare(self, html: str, anchor: str = '') -> List[str]:
+    def _parse_madcap_flare(
+        self,
+        html: str,
+        anchor: str = '',
+        version: str = '',
+        module_name: str = '',
+        limit: Optional[int] = 5,
+    ) -> List[str]:
         """
         Parse MadCap Flare HTML (help.puppet.com) for release notes.
         
@@ -259,6 +275,8 @@ class ReleaseNotesFetcher:
             )
         
         search_root = self._find_anchor_section_root(content_container, anchor)
+        if not anchor:
+            search_root = self._find_version_section_root(search_root, version, module_name)
 
         # Find actual content lists (skip TOC-style lists with just links)
         for li in search_root.find_all('li'):
@@ -266,7 +284,43 @@ class ReleaseNotesFetcher:
             if text and self._is_content_item(text):
                 bullets.append(text)
         
-        return self._dedupe_and_limit(bullets, limit=5)
+        return self._dedupe_and_limit(bullets, limit=limit)
+
+    def _find_version_section_root(self, content_container, version: str, module_name: str = ''):
+        """Scope parsing to the section matching the target version when possible."""
+        if not version:
+            return content_container
+
+        version_pattern = re.compile(rf'\b{re.escape(version)}\b')
+        heading_tags = ['h1', 'h2', 'h3', 'h4']
+        version_heading = None
+
+        for heading in content_container.find_all(heading_tags):
+            heading_text = self._clean_text(heading.get_text(' ', strip=True))
+            if version_pattern.search(heading_text):
+                version_heading = heading
+                break
+
+        if not version_heading:
+            return content_container
+
+        section_nodes = [version_heading]
+        node = version_heading.find_next_sibling()
+        while node is not None:
+            if getattr(node, 'name', None) == version_heading.name:
+                node_text = self._clean_text(node.get_text(' ', strip=True))
+                if re.search(r'\b\d+\.\d+\.\d+\b', node_text):
+                    break
+
+            section_nodes.append(node)
+            node = node.find_next_sibling()
+
+        scoped_soup = BeautifulSoup('', 'html.parser')
+        wrapper = scoped_soup.new_tag('div')
+        for section_node in section_nodes:
+            wrapper.append(section_node)
+        scoped_soup.append(wrapper)
+        return scoped_soup
 
     def _find_anchor_section_root(self, content_container, anchor: str):
         """Return a scoped root for an anchor section when available."""
@@ -304,19 +358,40 @@ class ReleaseNotesFetcher:
     def _clean_madcap_text(self, li_element) -> str:
         """
         Extract and clean text from a MadCap Flare <li> element.
-        
+
         Handles <li><p>text</p></li>, <li>text</li>, nested markup, etc.
+        Preserves <b> tags as **markdown bold** so titles stay readable.
         """
         # Try to get text from nested <p> first (most common in MadCap)
         p_tag = li_element.find('p')
-        if p_tag:
-            text = p_tag.get_text(' ', strip=True)
-        else:
-            text = li_element.get_text(' ', strip=True)
-        
+        el = p_tag if p_tag else li_element
+
+        parts = []
+        for child in el.children:
+            if hasattr(child, 'name'):
+                if child.name == 'b':
+                    inner = child.get_text(' ', strip=True)
+                    if inner:
+                        parts.append(f'**{inner}**')
+                else:
+                    inner = child.get_text(' ', strip=True)
+                    if inner:
+                        parts.append(inner)
+            else:
+                # NavigableString
+                raw = str(child)
+                stripped = raw.strip()
+                if stripped:
+                    parts.append(stripped)
+
+        text = ' '.join(parts)
+        # Remove bold markdown wrapping lone punctuation (MadCap artifact: <b>.</b>)
+        text = re.sub(r'\*\*([.,:;!?])\*\*', r'\1', text)
+        # Remove space before sentence-ending punctuation that was previously a separate element
+        text = re.sub(r'\s+([.,:;!?])', r'\1', text)
         # Clean up whitespace
         text = re.sub(r'\s+', ' ', text or '').strip()
-        
+
         return text
     
     def _is_content_item(self, text: str) -> bool:
@@ -378,7 +453,7 @@ class ReleaseNotesFetcher:
             return ''
         return cleaned
 
-    def _dedupe_and_limit(self, items: List[str], limit: int = 5) -> List[str]:
+    def _dedupe_and_limit(self, items: List[str], limit: Optional[int] = 5) -> List[str]:
         """Deduplicate while preserving order, then limit list size."""
         seen = set()
         result: List[str] = []
@@ -388,7 +463,7 @@ class ReleaseNotesFetcher:
                 continue
             seen.add(key)
             result.append(item)
-            if len(result) >= limit:
+            if limit is not None and len(result) >= limit:
                 break
         return result
     
