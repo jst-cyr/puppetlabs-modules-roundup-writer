@@ -86,12 +86,18 @@ external_docs:
     parser_type: "madcap_flare"
     base_url: "https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/"
     url_pattern: "release_notes.htm"
+    version_anchor: true
+    version_anchor_format: "SecurityComplianceManagement{version_nodots}"
+    # e.g., version 3.7.1 -> #SecurityComplianceManagement371
     
   complyadm:
     doc_type: "help_puppet_madcap"
     parser_type: "madcap_flare"
     base_url: "https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/"
     url_pattern: "release_notes.htm"
+    version_anchor: true
+    version_anchor_format: "SecurityComplianceManagement{version_nodots}"
+    # e.g., version 3.7.1 -> #SecurityComplianceManagement371
     
   # NOTE:
   # puppet_data_connector and puppet_operational_dashboards use Forge changelog.

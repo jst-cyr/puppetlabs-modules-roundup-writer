@@ -289,9 +289,12 @@ class ModuleDiscovery:
         full_url = urljoin(base_url, url)
         
         # Check for version_anchor flag to append anchor to URL
-        # e.g., 5.15.0 -> #Version5150
+        # Supports optional version_anchor_format string with {version_nodots} placeholder.
+        # e.g., cd4peadm 5.15.0 -> #Version5150
+        # e.g., comply 3.7.1 -> #SecurityComplianceManagement371
         if config.get('version_anchor', False):
-            version_anchor = f"Version{version_underscore}"
+            anchor_format = config.get('version_anchor_format', 'Version{version_nodots}')
+            version_anchor = anchor_format.replace('{version_nodots}', version_underscore)
             full_url = f"{full_url}#{version_anchor}"
         
         return full_url
