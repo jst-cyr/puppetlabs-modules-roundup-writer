@@ -14,7 +14,7 @@ This module uses Puppet Resources API for managing Windows audit policy using `a
 
 ### ruby_task_helper Dependency Bound Update
 
-Five Bolt-adjacent modules all bumped the ruby_task_helper upper bound to < 2.0.0 in a coordinated maintenance pass, ensuring forward compatibility with the upcoming 2.x release.
+Five Bolt-adjacent modules all bumped the ruby_task_helper upper bound to < 2.0.0 in a coordinated maintenance pass, helping with dependency resolution failures when using Bolt 5.x.
 
 - Affected modules: vault, terraform, http_request, gcloud_inventory, azure_inventory.
 
