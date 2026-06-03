@@ -69,7 +69,7 @@ This new module allows you to manage Windows audit policy with auditpol.exe as a
 
 This release bumped the ruby_task_helper upper bound to **< 2.0.0**.
 
-- **Bump ruby_task_helper upper bound to < 2.0.0** ([#16](https://github.com/puppetlabs/puppetlabs-azure_inventory/pull/16))
+- Bump ruby_task_helper upper bound to < 2.0.0 ([#16](https://github.com/puppetlabs/puppetlabs-azure_inventory/pull/16))
 
 ---
 
@@ -107,7 +107,7 @@ This release added support for CentOS 9 while also addressing runner images for 
 
 This release bumped the ruby_task_helper upper bound to **< 2.0.0**.
 
-- **Bump ruby_task_helper upper bound to < 2.0.0** ([#14](https://github.com/puppetlabs/puppetlabs-gcloud_inventory/pull/14))
+- Bump ruby_task_helper upper bound to < 2.0.0 ([#14](https://github.com/puppetlabs/puppetlabs-gcloud_inventory/pull/14))
 
 ---
 
@@ -117,7 +117,7 @@ This release bumped the ruby_task_helper upper bound to **< 2.0.0**.
 
 This release bumped the ruby_task_helper upper bound to **< 2.0.0**.
 
-- **Bump ruby_task_helper upper bound to < 2.0.0** ([#18](https://github.com/puppetlabs/puppetlabs-http_request/pull/18))
+- Bump ruby_task_helper upper bound to < 2.0.0 ([#18](https://github.com/puppetlabs/puppetlabs-http_request/pull/18))
 
 ---
 
@@ -154,7 +154,7 @@ Updates to new tooling (Bolt, PDK Templates) as well as support for MacOS 26 and
 
 This release bumped the ruby_task_helper upper bound to **< 2.0.0**.
 
-- **Bump ruby_task_helper upper bound to < 2.0.0** ([#37](https://github.com/puppetlabs/puppetlabs-terraform/pull/37))
+- Bump ruby_task_helper upper bound to < 2.0.0 ([#37](https://github.com/puppetlabs/puppetlabs-terraform/pull/37))
 
 ---
 
@@ -164,7 +164,7 @@ This release bumped the ruby_task_helper upper bound to **< 2.0.0**.
 
 This release bumped the ruby_task_helper upper bound to **< 2.0.0**.
 
-- **Bump ruby_task_helper upper bound to < 2.0.0** ([#19](https://github.com/puppetlabs/puppetlabs-vault/pull/19))
+- Bump ruby_task_helper upper bound to < 2.0.0 ([#19](https://github.com/puppetlabs/puppetlabs-vault/pull/19))
 
 ## Until Next Time!
 
