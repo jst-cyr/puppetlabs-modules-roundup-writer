@@ -34,6 +34,10 @@ The following is an alphabetical listing of modules which received updates in {{
 
 📅 Latest release: {{YYYY-MM-DD}} (🌐 [View on the Forge]({{FORGE_URL_1}}))
 
+<!-- If this is a brand new module release (typically 1.0.0), use instead:
+🌟 ***New Module:*** {{YYYY-MM-DD}} (🌐 [View on the Forge]({{FORGE_URL_1}}))
+-->
+
 {{MODULE_SUMMARY_1}}
 
 - {{CHANGE_1A}}

@@ -209,6 +209,7 @@ class RoundupGenerator:
                 continue
 
             forge_url = module.get('forge_url') or f"https://forge.puppet.com/modules/puppetlabs/{slug}"
+            is_new_module = self._is_new_module_release(module)
             if module.get('source') == 'external_docs':
                 summary = self._build_external_summary_block(module)
                 bullet_lines = []
@@ -221,7 +222,7 @@ class RoundupGenerator:
             entry_lines = [
                 f"### {name} {version}",
                 "",
-                f"📅 Latest release: {release_date} (🌐 [View on the Forge]({forge_url}))",
+                self._release_header_line(release_date, forge_url, is_new_module),
                 "",
                 summary,
             ]
@@ -404,6 +405,25 @@ class RoundupGenerator:
             return ''
 
         return f"Check the official [release notes for {module.get('name')} {version}]({source_url}) for the full details."
+
+    def _release_header_line(self, release_date: str, forge_url: str, is_new_module: bool) -> str:
+        """Render module release line, with a special format for brand new modules."""
+        if is_new_module:
+            return f"🌟 ***New Module:*** {release_date} (🌐 [View on the Forge]({forge_url}))"
+        return f"📅 Latest release: {release_date} (🌐 [View on the Forge]({forge_url}))"
+
+    def _is_new_module_release(self, module: Dict) -> bool:
+        """Determine whether this entry likely represents a newly released module."""
+        if module.get('is_new_module') is True:
+            return True
+
+        version = str(module.get('version', '')).strip()
+        releases_in_month = module.get('releases_in_month', [])
+
+        # New modules generally debut at 1.0.0 and only have a single monthly release.
+        is_initial_semver = bool(re.fullmatch(r'1\.0\.0(?:[-+][A-Za-z0-9._-]+)?', version))
+        single_release_this_month = not isinstance(releases_in_month, list) or len(releases_in_month) <= 1
+        return is_initial_semver and single_release_this_month
 
     def _rolled_up_release_line(self, releases_in_month: List[Dict]) -> str:
         """Return an informational line listing all rolled-up releases for the month."""
@@ -608,7 +628,7 @@ class RoundupGenerator:
             errors.append("Module entries not in alphabetical order")
         
         # Check that all modules have URLs
-        release_lines = re.findall(r'^📅 Latest release: .+$', module_section, re.MULTILINE)
+        release_lines = re.findall(r'^(?:📅 Latest release:|🌟 \*\*\*New Module:\*\*\*) .+$', module_section, re.MULTILINE)
         missing_urls = [line for line in release_lines if 'https://' not in line]
         if missing_urls:
             errors.append('Some module entries are missing Forge URLs')

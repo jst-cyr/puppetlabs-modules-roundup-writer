@@ -59,6 +59,9 @@ python scripts/04_generate_roundup.py --highlights data/march_2026_highlights_ca
 Expected output file:
 - posts/2026-03 March 2026 Puppetlabs Modules Roundup.md
 
+Notes:
+- Stage 4 uses a special release line for brand new modules (typically `1.0.0`): `🌟 ***New Module:*** YYYY-MM-DD (🌐 View on the Forge)`.
+
 ## Notes
 
 - `config/release_notes_sources.yaml` is an override map plus a default source.

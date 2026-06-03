@@ -22,6 +22,7 @@ Collect the following before writing:
 - Use Markdown bullets for changes, matching the existing style.
 - Include external links only when they add clear value (Forge/release notes).
 - Keep tone consistent with prior roundup posts in `posts/`.
+- When a module appears to be a brand new release (typically `1.0.0` with no prior monthly versions), use the special release line format: `🌟 ***New Module:*** YYYY-MM-DD (🌐 [View on the Forge](...))`.
 
 ## Output Procedure
 
@@ -40,3 +41,4 @@ Before finalizing, verify:
 - Version/date/URL fields are present for every module.
 - Each module has at least one concrete change item.
 - The “Until Next Time!” section remains present and complete.
+- Any new-module entry uses `New Module` wording (not `New Release`) with the star emoji format.

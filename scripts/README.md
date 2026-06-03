@@ -144,6 +144,7 @@ python scripts/04_generate_roundup.py \
   - Intro: Month/year paragraph
   - Highlighted Updates: Themes, breaking changes, security updates (from curated YAML)
   - Module entries: Alphabetical list with version, date, URL, and bullets
+  - New module entries: Automatically uses `🌟 ***New Module:***` (instead of `Latest release`) when a module appears to be a brand new release (typically `1.0.0`)
   - Closing: Standard closing paragraph
 - Validates per `AGENTS.md` checklist:
   - ✓ No unresolved `{{PLACEHOLDERS}}`
