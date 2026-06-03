@@ -32,25 +32,34 @@ The following is an alphabetical listing of modules which received updates in Ma
 
 ### apt 11.3.1
 
-📅 Latest release: 2026-05-18 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/apt))
+📅 Latest release: 2026-05-19 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/apt))
 
-This release focuses on use explicit hash value syntax instead of shorthand.
+This release introduced an explicit hash value syntax while also adding a param to support purging keyrings and other community contributions.
+
+Includes monthly releases: 11.3.1 (2026-05-19), 11.3.0 (2026-05-18).
 
 - Use explicit hash value syntax instead of shorthand [#1285](https://github.com/puppetlabs/puppetlabs-apt/pull/1285) ([SugatD](https://github.com/SugatD))
+- Add param for purging keyrings [#1266](https://github.com/puppetlabs/puppetlabs-apt/pull/1266) ([bwitt](https://github.com/bwitt))
+- Include components when suite does not end with slash [#1259](https://github.com/puppetlabs/puppetlabs-apt/pull/1259) ([bwitt](https://github.com/bwitt))
+- Bugfix - sources format and ensure => absent fails [#1243](https://github.com/puppetlabs/puppetlabs-apt/pull/1243) ([traylenator](https://github.com/traylenator))
+- fix: allow plus signs in ppa [#1222](https://github.com/puppetlabs/puppetlabs-apt/pull/1222) ([moritz-makandra](https://github.com/moritz-makandra))
+- Fix and improve DEB822-style template [#1212](https://github.com/puppetlabs/puppetlabs-apt/pull/1212) ([smortex](https://github.com/smortex))
 
 ---
 
 ### audit_policy 1.0.0
 
-📅 Latest release: 2026-05-28 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/audit_policy))
+🌟 ***New Module:*** 2026-05-29 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/audit_policy))
 
-This release focuses on audit_policy_subcategory: manage Windows audit policy subcategories by display name using auditpol.exe while also addressing audit_policy_guid: manage Windows audit policy subcategories by GUID using auditpol.exe.
+This new module allows you to manage Windows audit policy with auditpol.exe as a replacement for the generated DSC community module. Initial release contains:
 
 - audit_policy_subcategory: manage Windows audit policy subcategories by display name using auditpol.exe
 - audit_policy_guid: manage Windows audit policy subcategories by GUID using auditpol.exe
 - audit_policy_option: manage global Windows audit policy options (CrashOnAuditFail, FullPrivilegeAuditing, AuditBaseObjects, AuditBaseDirectories)
 - audit_policy_csv: manage Windows audit policy by importing settings from an auditpol /backup CSV file
 - Support for Windows Server 2016, 2019, 2022, and 2025
+- Pure Ruby implementation — no PowerShell dependency; replaces the dsc-auditpolicydsc community module
+- Puppet requirement pinned to >= 8.0.0 < 9.0.0
 
 ---
 
@@ -114,7 +123,7 @@ This release bumped the ruby_task_helper upper bound to **< 2.0.0**.
 
 ### inifile 6.4.0
 
-📅 Latest release: 2026-05-18 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/inifile))
+📅 Latest release: 2026-05-19 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/inifile))
 
 The inifile module now supports multiple values per key while also adding support for CentOS 9.
 
@@ -134,6 +143,8 @@ Updates to new tooling (Bolt, PDK Templates) as well as support for MacOS 26 and
 - (PA-8250) Allow installation of puppetcore9-nightly packages [#822](https://github.com/puppetlabs/puppetlabs-puppet_agent/pull/822) ([joshcooper](https://github.com/joshcooper))
 - (PA-8238) Add support for MacOS 26 in install_shell.sh [#821](https://github.com/puppetlabs/puppetlabs-puppet_agent/pull/821) ([shubhamshinde360](https://github.com/shubhamshinde360))
 - (PA-8250) Restore windows command to check puppet service [#826](https://github.com/puppetlabs/puppetlabs-puppet_agent/pull/826) ([joshcooper](https://github.com/joshcooper))
+- (PA-8041) Fix puppetcore8-nightly installs on rpm and mac [#824](https://github.com/puppetlabs/puppetlabs-puppet_agent/pull/824) ([joshcooper](https://github.com/joshcooper))
+- (PA-8247) Add guard against other ruby process when installing [#823](https://github.com/puppetlabs/puppetlabs-puppet_agent/pull/823) ([AriaXLi](https://github.com/AriaXLi))
 
 ---
 
@@ -161,4 +172,4 @@ That closes out the May 2026 update set. For deeper implementation detail, the l
 
 If you have feedback on the roundup format or want a deeper look at a specific module area, the Perforce Community Slack is still the best place to continue the conversation.
 
-The next roundup will pick up with June 2026 releases.
+See you next month with a roundup for June releases!
