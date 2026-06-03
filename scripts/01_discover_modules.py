@@ -110,7 +110,8 @@ class ModuleDiscovery:
                         continue
 
                     try:
-                        release_date = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z').strftime('%Y-%m-%d')
+                        parsed_release = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z')
+                        release_date = parsed_release.astimezone(timezone.utc).strftime('%Y-%m-%d')
                     except ValueError:
                         continue
 
@@ -222,6 +223,8 @@ class ModuleDiscovery:
     def filter_by_month(self, discovered: Dict, target_month: int, target_year: int) -> Dict:
         """Filter modules to only those released in target month/year."""
         filtered_modules = []
+        discovered.setdefault('metadata', {})['target_month'] = datetime(target_year, target_month, 1).strftime('%B')
+        discovered.setdefault('metadata', {})['target_year'] = target_year
         
         for module in discovered.get('modules', []):
             release_date = module.get('release_date')

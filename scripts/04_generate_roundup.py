@@ -203,6 +203,7 @@ class RoundupGenerator:
             version = module.get('version', '')
             release_date = module.get('release_date', '')
             bullets = module.get('parsed_bullets', [])
+            releases_in_month = module.get('releases_in_month', [])
 
             if not (name and slug and version):
                 continue
@@ -213,8 +214,9 @@ class RoundupGenerator:
                 bullet_lines = []
             else:
                 summary = self._summarize_module(module)
-                bullet_lines = [f"- {bullet}" for bullet in bullets[:5] if bullet]
+                bullet_lines = [f"- {bullet}" for bullet in bullets if bullet]
             optional_line = self._optional_release_notes_line(module)
+            rollover_line = self._rolled_up_release_line(releases_in_month)
 
             entry_lines = [
                 f"### {name} {version}",
@@ -223,6 +225,10 @@ class RoundupGenerator:
                 "",
                 summary,
             ]
+
+            if rollover_line:
+                entry_lines.append("")
+                entry_lines.append(rollover_line)
 
             if bullet_lines:
                 entry_lines.append("")
@@ -398,6 +404,25 @@ class RoundupGenerator:
             return ''
 
         return f"Check the official [release notes for {module.get('name')} {version}]({source_url}) for the full details."
+
+    def _rolled_up_release_line(self, releases_in_month: List[Dict]) -> str:
+        """Return an informational line listing all rolled-up releases for the month."""
+        if not isinstance(releases_in_month, list) or len(releases_in_month) <= 1:
+            return ''
+
+        parts = []
+        for release in releases_in_month:
+            version = release.get('version', '')
+            release_date = release.get('release_date', '')
+            if version and release_date:
+                parts.append(f"{version} ({release_date})")
+            elif version:
+                parts.append(version)
+
+        if not parts:
+            return ''
+
+        return f"Includes monthly releases: {', '.join(parts)}."
 
     def _generate_post(
         self,

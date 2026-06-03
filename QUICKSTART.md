@@ -27,6 +27,10 @@ Expected output files:
 - data/march_2026_release_notes_raw.json
 - data/raw_html/*.html
 
+Notes:
+- Forge-backed modules are rolled up by month: if a module has multiple releases in the target month, Stage 2 aggregates bullets from all of them.
+- The module `version` and `release_date` in `release_notes_raw.json` represent the latest release in that month.
+
 ## 4) Generate highlights candidates with Copilot
 
 ```powershell

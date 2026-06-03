@@ -10,6 +10,11 @@ Usage:
 Output:
     - data/{month}_{year}_release_notes_raw.json
     - data/raw_html/{module}_{version}.html (raw HTML snapshots for reproducibility)
+
+Behavior:
+    - For Forge-backed modules, all releases in the target month are rolled up together.
+    - Top-level version/release_date represent the latest release in that month.
+    - releases_in_month lists each monthly version and its parsed bullets.
 """
 
 import argparse
@@ -17,7 +22,7 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import re
 from urllib.parse import urldefrag
 import yaml
@@ -44,7 +49,15 @@ class ReleaseNotesFetcher:
             with open(config_path, 'r') as f:
                 self.config = yaml.safe_load(f) or {}
     
-    def fetch_from_forge(self, module_slug: str, version: str, source_url: Optional[str] = None) -> Optional[Dict]:
+    def fetch_from_forge(
+        self,
+        module_slug: str,
+        version: str,
+        source_url: Optional[str] = None,
+        target_month: Optional[int] = None,
+        target_year: Optional[int] = None,
+        fallback_release_date: str = '',
+    ) -> Optional[Dict]:
         """
         Fetch release notes from Puppet Forge changelog tab.
         
@@ -66,16 +79,195 @@ class ReleaseNotesFetcher:
         
         html_content = response.text
         
-        # Parse HTML to extract bullets for this version
-        bullets = self._parse_forge_changelog(html_content, version)
+        # Parse HTML to extract bullets for this version/month
+        monthly_rollup = self._parse_forge_monthly_changelog(
+            html=html_content,
+            latest_version=version,
+            target_month=target_month,
+            target_year=target_year,
+            fallback_release_date=fallback_release_date,
+        )
+
+        bullets = monthly_rollup.get('parsed_bullets', [])
         
         return {
             'source': 'forge_changelog',
             'source_url': changelog_url,
             'html_snapshot_path': None,  # Will be set by caller
             'parsed_bullets': bullets if bullets else ['See release notes on Puppet Forge'],
+            'releases_in_month': monthly_rollup.get('releases_in_month', []),
+            'latest_monthly_version': monthly_rollup.get('latest_version') or version,
+            'latest_monthly_release_date': monthly_rollup.get('latest_release_date') or fallback_release_date,
             'raw_html': html_content,
         }
+
+    def _parse_forge_monthly_changelog(
+        self,
+        html: str,
+        latest_version: str,
+        target_month: Optional[int],
+        target_year: Optional[int],
+        fallback_release_date: str,
+    ) -> Dict:
+        """Parse Forge changelog and roll up all releases that match the target month/year."""
+        soup = BeautifulSoup(html, 'html.parser')
+        changelog = self._extract_forge_markdown_changelog(soup)
+
+        if not changelog:
+            bullets = self._parse_forge_changelog(html, latest_version)
+            return {
+                'parsed_bullets': bullets,
+                'releases_in_month': [
+                    {
+                        'version': latest_version,
+                        'release_date': fallback_release_date,
+                        'parsed_bullets': bullets,
+                    }
+                ] if bullets else [],
+                'latest_version': latest_version,
+                'latest_release_date': fallback_release_date,
+            }
+
+        all_sections = self._extract_markdown_release_sections(changelog)
+        monthly_sections = self._filter_sections_by_month(all_sections, target_month, target_year)
+
+        if not monthly_sections:
+            # Fall back to the specific latest version for backwards compatibility.
+            bullets = self._extract_markdown_bullets_for_version(changelog, latest_version)
+            return {
+                'parsed_bullets': bullets,
+                'releases_in_month': [
+                    {
+                        'version': latest_version,
+                        'release_date': fallback_release_date,
+                        'parsed_bullets': bullets,
+                    }
+                ] if bullets else [],
+                'latest_version': latest_version,
+                'latest_release_date': fallback_release_date,
+            }
+
+        rolled_up_bullets: List[str] = []
+        releases_in_month: List[Dict] = []
+
+        for section in monthly_sections:
+            section_bullets = self._dedupe_and_limit(section.get('bullets', []), limit=None)
+            releases_in_month.append(
+                {
+                    'version': section.get('version', ''),
+                    'release_date': section.get('release_date', ''),
+                    'parsed_bullets': section_bullets,
+                }
+            )
+            rolled_up_bullets.extend(section_bullets)
+
+        latest = monthly_sections[0]
+        return {
+            'parsed_bullets': self._dedupe_and_limit(rolled_up_bullets, limit=None),
+            'releases_in_month': releases_in_month,
+            'latest_version': latest.get('version') or latest_version,
+            'latest_release_date': fallback_release_date or latest.get('release_date') or '',
+        }
+
+    def _extract_forge_markdown_changelog(self, soup: BeautifulSoup) -> str:
+        """Extract markdown changelog from Forge Next.js payload when available."""
+        next_data = soup.find('script', id='__NEXT_DATA__')
+        if not next_data or not next_data.string:
+            return ''
+
+        try:
+            payload = json.loads(next_data.string)
+        except (json.JSONDecodeError, TypeError):
+            return ''
+
+        changelog = (
+            payload.get('props', {})
+            .get('pageProps', {})
+            .get('release', {})
+            .get('changelog')
+        )
+        if isinstance(changelog, str):
+            return changelog
+        return ''
+
+    def _extract_markdown_release_sections(self, changelog: str) -> List[Dict]:
+        """Extract version/date scoped sections from markdown changelog."""
+        lines = changelog.splitlines()
+        sections: List[Dict] = []
+        current_heading = ''
+        current_lines: List[str] = []
+
+        for line in lines:
+            if line.startswith('## '):
+                if current_heading:
+                    section = self._build_release_section(current_heading, current_lines)
+                    if section:
+                        sections.append(section)
+                current_heading = line.strip()
+                current_lines = []
+                continue
+
+            if current_heading:
+                current_lines.append(line)
+
+        if current_heading:
+            section = self._build_release_section(current_heading, current_lines)
+            if section:
+                sections.append(section)
+
+        # Sort most recent first by release_date, with unknown dates last.
+        sections.sort(key=lambda s: s.get('release_date') or '', reverse=True)
+        return sections
+
+    def _build_release_section(self, heading: str, section_lines: List[str]) -> Optional[Dict]:
+        """Build a release section record from a markdown heading and body lines."""
+        version_match = re.search(r'\b(?:v)?(\d+\.\d+\.\d+(?:[-+][A-Za-z0-9._-]+)?)\b', heading)
+        if not version_match:
+            return None
+
+        release_date_match = re.search(r'\b(20\d{2}-\d{2}-\d{2})\b', heading)
+        release_date = release_date_match.group(1) if release_date_match else ''
+
+        bullets: List[str] = []
+        for line in section_lines:
+            stripped = line.strip()
+            if stripped.startswith('- ') or stripped.startswith('* '):
+                bullet = re.sub(r'^[-*]\s+', '', stripped)
+                cleaned = self._clean_text(bullet)
+                if cleaned:
+                    bullets.append(cleaned)
+
+        return {
+            'version': version_match.group(1),
+            'release_date': release_date,
+            'bullets': self._dedupe_and_limit(bullets, limit=None),
+        }
+
+    def _filter_sections_by_month(
+        self,
+        sections: List[Dict],
+        target_month: Optional[int],
+        target_year: Optional[int],
+    ) -> List[Dict]:
+        """Filter release sections by target month/year."""
+        if not target_month or not target_year:
+            return sections
+
+        filtered: List[Dict] = []
+        for section in sections:
+            release_date = section.get('release_date', '')
+            if not release_date:
+                continue
+
+            try:
+                parsed = datetime.strptime(release_date, '%Y-%m-%d')
+            except ValueError:
+                continue
+
+            if parsed.month == target_month and parsed.year == target_year:
+                filtered.append(section)
+
+        return filtered
     
     def fetch_from_external_docs(self, module_name: str, version: str, docs_url: str, parser_type: Optional[str] = None) -> Optional[Dict]:
         """
@@ -483,6 +675,31 @@ class ReleaseNotesFetcher:
         return snapshot_path
 
 
+def infer_target_month_year(discovered: Dict, input_path: Path) -> Tuple[Optional[int], Optional[int]]:
+    """Infer target month/year from discovery metadata, with filename fallback."""
+    metadata = discovered.get('metadata', {})
+    target_month_value = metadata.get('target_month')
+    target_year_value = metadata.get('target_year')
+
+    if isinstance(target_month_value, str) and target_month_value and target_year_value:
+        try:
+            month_num = datetime.strptime(target_month_value.capitalize(), '%B').month
+            return month_num, int(target_year_value)
+        except (ValueError, TypeError):
+            pass
+
+    match = re.search(r'([a-zA-Z]+)_(\d{4})_modules_discovered', input_path.name)
+    if match:
+        month_name = match.group(1).capitalize()
+        try:
+            month_num = datetime.strptime(month_name, '%B').month
+            return month_num, int(match.group(2))
+        except ValueError:
+            return None, None
+
+    return None, None
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Fetch and parse release notes for modules from Stage 1 discovery'
@@ -517,6 +734,8 @@ def main():
     # Load discovered modules
     with open(input_path, 'r') as f:
         discovered = json.load(f)
+
+    target_month_num, target_year = infer_target_month_year(discovered, input_path)
     
     modules = discovered.get('modules', [])
     print(f"Fetching release notes for {len(modules)} modules...", file=sys.stderr)
@@ -559,7 +778,14 @@ def main():
                 'raw_html': None,
             }
         else:
-            release_info = fetcher.fetch_from_forge(module_slug, version, source_url=source_url)
+            release_info = fetcher.fetch_from_forge(
+                module_slug,
+                version,
+                source_url=source_url,
+                target_month=target_month_num,
+                target_year=target_year,
+                fallback_release_date=release_date,
+            )
         
         if release_info:
             raw_html = release_info.pop('raw_html', None)
@@ -568,12 +794,15 @@ def main():
                 snapshot_path = fetcher.save_html_snapshot(module_name, version, raw_html, snapshot_dir)
                 html_snapshot_path = str(snapshot_path)
 
+            effective_version = release_info.pop('latest_monthly_version', version)
+            effective_release_date = release_info.pop('latest_monthly_release_date', release_date)
+
             # Add module metadata
             entry = {
                 'name': module_name,
                 'slug': module_slug,
-                'version': version,
-                'release_date': release_date,
+                'version': effective_version,
+                'release_date': effective_release_date,
                 **release_info,
                 'html_snapshot_path': html_snapshot_path,
             }

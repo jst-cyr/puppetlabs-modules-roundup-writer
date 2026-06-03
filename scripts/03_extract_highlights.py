@@ -100,8 +100,15 @@ class GitHubCopilotHighlightsExtractor:
             version = entry.get('version', '?')
             release_date = entry.get('release_date', '?')
             bullets = entry.get('parsed_bullets', [])
+            releases_in_month = entry.get('releases_in_month', [])
+
+            release_suffix = ''
+            if isinstance(releases_in_month, list) and len(releases_in_month) > 1:
+                versions = [rel.get('version', '').strip() for rel in releases_in_month if rel.get('version')]
+                if versions:
+                    release_suffix = f"; includes {len(releases_in_month)} monthly releases: {', '.join(versions)}"
             
-            lines.append(f"\n## {module_name} v{version} (released {release_date})\n")
+            lines.append(f"\n## {module_name} v{version} (released {release_date}{release_suffix})\n")
             for bullet in bullets:
                 lines.append(f"- {bullet}")
         
