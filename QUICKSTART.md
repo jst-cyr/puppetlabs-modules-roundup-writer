@@ -31,7 +31,19 @@ Notes:
 - Forge-backed modules are rolled up by month: if a module has multiple releases in the target month, Stage 2 aggregates bullets from all of them.
 - The module `version` and `release_date` in `release_notes_raw.json` represent the latest release in that month.
 
-## 4) Generate highlights candidates with Copilot
+## 4) Generate highlights candidates
+
+### Option A: Claude (recommended)
+
+Ask Claude to read `data/march_2026_release_notes_raw.json`, analyze the release notes, and write `data/march_2026_highlights_candidates.yaml` directly. See `CLAUDE.md` for the required YAML structure and analysis rules.
+
+Then validate:
+
+```powershell
+python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json --from-file data/march_2026_highlights_candidates.yaml
+```
+
+### Option B: GitHub Copilot (original workflow)
 
 ```powershell
 python scripts/03_extract_highlights.py --input data/march_2026_release_notes_raw.json
@@ -49,6 +61,8 @@ python scripts/03_extract_highlights.py --input data/march_2026_release_notes_ra
 
 Expected output file:
 - data/march_2026_highlights_candidates.yaml
+
+**Before running Stage 5:** Review and curate the YAML — delete or edit entries that are not worth featuring in the post.
 
 ## 5) Generate final post
 
