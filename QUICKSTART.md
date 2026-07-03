@@ -17,6 +17,9 @@ python scripts/01_discover_modules.py --month March --year 2026
 Expected output file:
 - data/march_2026_modules_discovered.json
 
+Notes:
+- Automatically recovers modules whose *current* release lands just after the target month but which also shipped a release inside it (e.g. released twice within days, straddling a month boundary). No manual patching of the discovery JSON should be needed — see `AGENTS.md`.
+
 ## 3) Fetch release notes and parse bullets
 
 ```powershell

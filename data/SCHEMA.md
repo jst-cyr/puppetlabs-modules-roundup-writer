@@ -64,6 +64,10 @@ This directory contains intermediate data files used in the roundup generation p
 - `released_in_target_month`: Boolean, parsed from release_date
 - `release_notes_source`: Type from `config/release_notes_sources.yaml`
 - `release_notes_url`: Constructed if external_docs, else null
+- `recovered_from_overshoot`: `true` if this entry was recovered because the module's
+  current release postdates the target month but an earlier release that month was
+  found by checking full release history (see `recover_overshot_releases()` in
+  `scripts/01_discover_modules.py`). Absent/false for normally-discovered modules.
 
 ---
 

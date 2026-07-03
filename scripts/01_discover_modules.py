@@ -17,7 +17,7 @@ import sys
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 from urllib.parse import urljoin
 import yaml
 
@@ -220,6 +220,118 @@ class ModuleDiscovery:
             'modules': modules
         }
     
+    def recover_overshot_releases(self, discovered: Dict, target_month: int, target_year: int) -> Dict:
+        """
+        Recover modules whose *current* release lands after the target month but which
+        also shipped a release inside the target month.
+
+        The Forge listing page only exposes each module's single current_release, so a
+        module that released twice in quick succession (e.g. once in the target month,
+        then again early the following month) never surfaces via the normal per-month
+        filter: its current_release date falls outside the target month entirely, and
+        the in-month release is invisible without checking full version history.
+
+        For every module whose current_release postdates the target month, this fetches
+        the module's full release history from Forge and, if a release inside the target
+        month is found, appends a synthetic module entry for that release so it flows
+        into filter_by_month() normally.
+        """
+        target_period = (target_year, target_month)
+        overshot = []
+
+        for module in discovered.get('modules', []):
+            release_date = module.get('release_date')
+            if not release_date:
+                continue
+            try:
+                rel_date = datetime.strptime(release_date, '%Y-%m-%d').date()
+            except ValueError:
+                continue
+            if (rel_date.year, rel_date.month) > target_period:
+                overshot.append(module)
+
+        if not overshot:
+            return discovered
+
+        recovered = []
+        for module in overshot:
+            slug = module.get('slug')
+            if not slug:
+                continue
+            match = self._find_release_in_month(slug, target_month, target_year)
+            if not match:
+                continue
+            print(
+                f"Recovered hidden {target_year}-{target_month:02d} release for {slug}: "
+                f"{match['version']} ({match['release_date']}), current release is "
+                f"{module.get('latest_version')} ({module.get('release_date')})",
+                file=sys.stderr,
+            )
+            recovered_module = dict(module)
+            recovered_module['latest_version'] = match['version']
+            recovered_module['release_date'] = match['release_date']
+            recovered_module['released_in_target_month'] = False  # set by filter_by_month
+            recovered_module['recovered_from_overshoot'] = True
+            recovered.append(recovered_module)
+
+        discovered['modules'] = discovered.get('modules', []) + recovered
+        return discovered
+
+    def _find_release_in_month(self, module_slug: str, target_month: int, target_year: int) -> Optional[Dict]:
+        """Fetch a module's full release history and return its latest release in the target month, if any."""
+        releases_url = f"https://forge.puppet.com/modules/puppetlabs/{module_slug}/releases"
+        try:
+            response = requests.get(
+                releases_url,
+                timeout=10,
+                headers={'User-Agent': 'puppetlabs-roundup-bot/1.0'}
+            )
+            response.raise_for_status()
+        except requests.RequestException as e:
+            print(f"WARNING: Failed to fetch release history for {module_slug}: {e}", file=sys.stderr)
+            return None
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        next_data = soup.find('script', id='__NEXT_DATA__')
+        if not next_data or not next_data.string:
+            return None
+
+        try:
+            payload = json.loads(next_data.string)
+        except (json.JSONDecodeError, TypeError):
+            return None
+
+        releases = (
+            payload.get('props', {})
+            .get('pageProps', {})
+            .get('module', {})
+            .get('releases', [])
+        )
+
+        best_match = None
+        for release in releases:
+            version = release.get('version', '')
+            created_at = release.get('created_at', '')
+            if not version or not created_at:
+                continue
+            try:
+                parsed = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z')
+                release_date = parsed.astimezone(timezone.utc)
+            except ValueError:
+                continue
+
+            if release_date.year == target_year and release_date.month == target_month:
+                if best_match is None or release_date > best_match['_sort_key']:
+                    best_match = {
+                        'version': version,
+                        'release_date': release_date.strftime('%Y-%m-%d'),
+                        '_sort_key': release_date,
+                    }
+
+        if best_match:
+            best_match.pop('_sort_key', None)
+        return best_match
+
     def filter_by_month(self, discovered: Dict, target_month: int, target_year: int) -> Dict:
         """Filter modules to only those released in target month/year."""
         filtered_modules = []
@@ -338,6 +450,7 @@ def main():
     
     discovery = ModuleDiscovery(Path(args.config))
     discovered = discovery.discover_modules()
+    discovered = discovery.recover_overshot_releases(discovered, month_num, args.year)
     discovered = discovery.filter_by_month(discovered, month_num, args.year)
     discovered = discovery.enrich_with_sources(discovered)
     

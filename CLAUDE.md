@@ -15,6 +15,11 @@ python scripts/01_discover_modules.py --month March --year 2026
 Crawls the Forge listing and identifies all puppetlabs modules released in the target month.
 Output: `data/march_2026_modules_discovered.json`
 
+Automatically recovers modules whose *current* release lands just after the target month
+but which also shipped a release inside it (e.g. a module released twice within days,
+straddling a month boundary) — see `recover_overshot_releases()` in the script and the
+note in `AGENTS.md`. No manual patching of the discovery JSON should be needed.
+
 ### Stage 2 – Fetch Release Notes
 
 ```powershell

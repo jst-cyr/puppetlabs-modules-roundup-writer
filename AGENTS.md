@@ -2,6 +2,18 @@
 
 If you are an agent generating a new monthly roundup, treat [MONTHLY_ROUNDUP_TEMPLATE.md](MONTHLY_ROUNDUP_TEMPLATE.md) as the source structure and fill all placeholders using verified release data.
 
+## A Note on Module Discovery Completeness
+
+`scripts/01_discover_modules.py` automatically recovers modules whose *current* Forge
+release lands just after the target month but which also shipped a release inside the
+target month (e.g. a module released on the 28th of the target month, then again on the
+2nd of the following month before this pipeline runs). It does this by checking full
+release history for any module whose current release postdates the target month — no
+manual intervention should be needed. If a curator or agent suspects a release is still
+missing (e.g. a module known to ship frequently doesn't appear despite a changelog entry
+in the target month), spot-check by fetching `https://forge.puppet.com/modules/puppetlabs/{slug}/releases`
+directly and compare its full version history against the discovered list.
+
 ## Required Input Data
 
 Collect the following before writing:

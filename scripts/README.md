@@ -37,6 +37,13 @@ python scripts/01_discover_modules.py --month March --year 2026
 **What it does:**
 - Fetches https://forge.puppet.com/modules/puppetlabs (up to 50 modules/page)
 - Extracts: name, slug, version, release_date, Forge URL
+- Recovers "hidden" releases: the Forge listing only exposes each module's single
+  *current* release, so a module that shipped a release in the target month and then
+  shipped again early the following month would otherwise be missed entirely (its
+  current release now falls outside the target month). For every module whose current
+  release postdates the target month, the script fetches that module's full release
+  history and checks for a release inside the target month, adding it if found. See
+  `recover_overshot_releases()` / `_find_release_in_month()`.
 - Filters for modules with `release_date` in target month
 - Looks up each module in `config/release_notes_sources.yaml` to determine where to fetch release notes
 - Outputs JSON with `released_in_target_month` flag for downstream stages
