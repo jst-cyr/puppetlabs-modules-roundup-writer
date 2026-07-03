@@ -160,6 +160,30 @@ python scripts/04_generate_roundup.py \
   - ✓ At least 1 bullet per module
 - Saves final markdown to `posts/`
 
+### Stage 5 (optional): Count Internal vs. Community Contributions
+
+Count how many contributions in a finished post came from Puppet/Perforce
+employees vs. the community.
+
+```bash
+python scripts/05_count_contributions.py --post "posts/2026-03 March 2026 Puppetlabs Modules Roundup.md"
+```
+
+**What it does:**
+- Scans the post for `([user](https://github.com/user))` attributions
+- Classifies each GitHub handle as internal or community using
+  `config/internal_contributors.yaml`
+- Counts **contributions**, not unique contributors — a person with 5 PRs
+  counts 5 times
+- Flags any handle not yet in the config as "Unknown" so it can be classified
+  and added for next month
+
+GitHub's public API only exposes *public* org membership, and most Puppet
+employees keep their `puppetlabs` org membership private, so this can't be
+auto-detected — `config/internal_contributors.yaml` is a hand-maintained
+allowlist. Update it whenever a new contributor (internal or community) shows
+up in a roundup.
+
 ## Full Workflow Example
 
 Generate roundup for March 2026:

@@ -1,0 +1,41 @@
+# Maintained allowlist of GitHub usernames known to belong to the Puppet/Perforce
+# team (i.e. the "puppetlabs" organization), for classifying roundup contributions
+# as internal vs. community in scripts/05_count_contributions.py.
+#
+# GitHub's public API only exposes *public* org membership (most Puppet employees
+# keep their puppetlabs org membership private), so this list can't be generated
+# automatically and must be curated by hand. When a new/unrecognized GitHub handle
+# shows up in a roundup, the script will flag it as "unknown" — look up whether the
+# person is a Puppet/Perforce employee (check their GitHub profile's company field,
+# whether their PRs reference internal ticket prefixes like CAT-/PE-/MODULES-, or
+# just ask around) and add them to the appropriate list below.
+#
+# Last reviewed: 2026-07 (June 2026 roundup)
+
+internal:
+  - imaqsood          # Perforce Puppet engineer
+  - LukasAud           # Puppet
+  - steveax            # Puppet Inc.
+  - owenbeckles        # Puppet/Perforce (puppetlabs)
+  - mcdonaldseanp      # Puppet/Perforce (puppetlabs)
+  - david22swan        # Public puppetlabs org member
+  - skyamgarp          # Puppet/Perforce
+  - gavindidrichsen    # Puppet/Perforce
+  - Ziaunys            # Perforce
+  - SugatD             # Puppet/Perforce
+  - CharithaDunuwille  # Puppet/Perforce (peadm maintainer)
+
+# Contributors confirmed NOT to be Puppet/Perforce employees. Listing them
+# explicitly (instead of just leaving them unclassified) lets the script tell
+# "known community" apart from "never seen before, needs a human to check."
+community:
+  - alexjfisher
+  - ikonia
+  - bastelfreak
+  - smortex
+  - mpdude
+  - mika
+  - kajinamit
+  - deligatedgeek
+  - davidassigbi
+  - JGodin-C2C
