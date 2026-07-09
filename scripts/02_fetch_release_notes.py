@@ -44,6 +44,10 @@ class ReleaseNotesFetcher:
     def __init__(self, config_path: Optional[Path] = None):
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': 'puppetlabs-roundup-bot/1.0'})
+        # Cache of PR URL -> author login (or None) so we hit the GitHub API at
+        # most once per PR. GitHub's unauthenticated API is rate limited to 60
+        # requests/hour per IP, so we only look up PRs that lack attribution.
+        self._pr_author_cache: Dict[str, Optional[str]] = {}
         self.config = {}
         if config_path and config_path.exists():
             with open(config_path, 'r') as f:
@@ -228,14 +232,7 @@ class ReleaseNotesFetcher:
         release_date_match = re.search(r'\b(20\d{2}-\d{2}-\d{2})\b', heading)
         release_date = release_date_match.group(1) if release_date_match else ''
 
-        bullets: List[str] = []
-        for line in section_lines:
-            stripped = line.strip()
-            if stripped.startswith('- ') or stripped.startswith('* '):
-                bullet = re.sub(r'^[-*]\s+', '', stripped)
-                cleaned = self._clean_text(bullet)
-                if cleaned:
-                    bullets.append(cleaned)
+        bullets = self._bullets_from_lines(section_lines)
 
         return {
             'version': version_match.group(1),
@@ -393,15 +390,7 @@ class ReleaseNotesFetcher:
             if in_section:
                 section_lines.append(line)
 
-        bullets: List[str] = []
-        for line in section_lines:
-            stripped = line.strip()
-            if stripped.startswith('- ') or stripped.startswith('* '):
-                bullet = re.sub(r'^[-*]\s+', '', stripped)
-                cleaned = self._clean_text(bullet)
-                if cleaned:
-                    bullets.append(cleaned)
-
+        bullets = self._bullets_from_lines(section_lines)
         return self._dedupe_and_limit(bullets, limit=5)
     
     def _parse_external_docs(self, html: str, limit: Optional[int] = 5) -> List[str]:
@@ -635,6 +624,123 @@ class ReleaseNotesFetcher:
                 return False
         
         return True
+
+    # Matches a PR reference such as "[#25](https://github.com/org/repo/pull/25)",
+    # optionally wrapped in parentheses ("([#25](...))") as older changelogs do.
+    _PR_LINK_RE = re.compile(
+        r'(?P<lp>\(?)\[#(?P<num>\d+)\]\((?P<url>https://github\.com/[^/]+/[^/]+/pull/\d+)\)(?P<rp>\)?)'
+    )
+    # Matches an author profile credit such as "([smortex](https://github.com/smortex))".
+    # The profile URL has no further path segment, which distinguishes it from a PR link.
+    _AUTHOR_CREDIT_RE = re.compile(r'\(\[[^\]]+\]\(https://github\.com/[^/)]+\)\)')
+
+    def _bullets_from_lines(self, section_lines: List[str]) -> List[str]:
+        """Turn markdown changelog lines into bullet strings.
+
+        A list item (``- ``/``* ``) may wrap onto indented continuation lines —
+        older puppetlabs changelogs put the PR reference on the line *after* the
+        title, e.g.::
+
+            * **Allow ruby_task_helper 1.x**
+              ([#25](https://github.com/puppetlabs/puppetlabs-aws_inventory/pull/25))
+
+        Continuation lines are merged into the current bullet until a blank line,
+        a heading, or the next list item ends it. This keeps the PR reference that
+        the previous line-by-line parser silently dropped.
+        """
+        bullets: List[str] = []
+        current: Optional[List[str]] = None
+
+        for line in section_lines:
+            stripped = line.strip()
+            if stripped.startswith('- ') or stripped.startswith('* '):
+                self._flush_bullet(bullets, current)
+                current = [re.sub(r'^[-*]\s+', '', stripped)]
+            elif not stripped or stripped.startswith('#'):
+                # Blank line or heading terminates the current bullet.
+                self._flush_bullet(bullets, current)
+                current = None
+            elif current is not None:
+                # Indented/continuation text belonging to the current bullet.
+                current.append(stripped)
+
+        self._flush_bullet(bullets, current)
+        return bullets
+
+    def _flush_bullet(self, bullets: List[str], parts: Optional[List[str]]) -> None:
+        """Finalize an accumulated bullet: join, clean, enrich attribution, append."""
+        if not parts:
+            return
+        cleaned = self._clean_text(' '.join(parts))
+        if cleaned:
+            bullets.append(self._enrich_bullet_attribution(cleaned))
+
+    def _enrich_bullet_attribution(self, bullet: str) -> str:
+        """Append community attribution to a bullet that references a PR but has none.
+
+        If the bullet already credits an author (newer changelog style), it is
+        returned unchanged. Otherwise the PR author is looked up via the public
+        GitHub API and rendered to match the existing style:
+        ``... [#N](url) ([login](https://github.com/login))``.
+        """
+        if self._AUTHOR_CREDIT_RE.search(bullet):
+            return bullet
+
+        match = self._PR_LINK_RE.search(bullet)
+        if not match:
+            return bullet
+
+        author = self._lookup_pr_author(match.group('url'))
+        if not author:
+            return bullet
+
+        pr_link = f"[#{match.group('num')}]({match.group('url')})"
+        credit = f"([{author}](https://github.com/{author}))"
+        # Replace the matched PR reference (dropping any wrapping parens) with the
+        # normalized "PR link + author credit" form.
+        return bullet[:match.start()] + f"{pr_link} {credit}" + bullet[match.end():]
+
+    def _lookup_pr_author(self, pr_url: str) -> Optional[str]:
+        """Look up a PR author's GitHub login via the public API (no token needed).
+
+        Results (including failures) are cached per URL. Network errors and rate
+        limiting are non-fatal: attribution is simply skipped for that bullet.
+        """
+        if pr_url in self._pr_author_cache:
+            return self._pr_author_cache[pr_url]
+
+        match = re.match(r'https://github\.com/([^/]+)/([^/]+)/pull/(\d+)', pr_url)
+        if not match:
+            self._pr_author_cache[pr_url] = None
+            return None
+
+        owner, repo, number = match.groups()
+        api_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{number}"
+        author: Optional[str] = None
+        try:
+            response = self.session.get(
+                api_url,
+                timeout=10,
+                headers={'Accept': 'application/vnd.github+json'},
+            )
+            if response.status_code == 200:
+                author = (response.json().get('user') or {}).get('login')
+            elif response.status_code in (403, 429):
+                print(
+                    f"WARNING: GitHub API rate limit hit looking up {api_url}; "
+                    "skipping author attribution for this PR",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"WARNING: GitHub API returned {response.status_code} for {api_url}",
+                    file=sys.stderr,
+                )
+        except requests.RequestException as e:
+            print(f"WARNING: Failed to look up PR author {api_url}: {e}", file=sys.stderr)
+
+        self._pr_author_cache[pr_url] = author
+        return author
 
     def _clean_text(self, text: str) -> str:
         """Normalize extracted list item text."""
