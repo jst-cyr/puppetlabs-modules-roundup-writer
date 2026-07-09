@@ -351,3 +351,11 @@ That wraps up the June 2026 roundup. If any of these modules intersect with your
 Feedback on the series is always useful, especially if there are module families or release-note patterns that deserve more attention in future editions.
 
 More updates coming next month when the July 2026 releases land.
+
+## 🤖 AI Disclosure
+
+<!-- Static text — emitted verbatim by scripts/04_generate_roundup.py (AI_DISCLOSURE). Keep the two in sync. -->
+
+This roundup is produced by a mostly-automated pipeline, with some AI sprinkled in for orchestration and enrichment (or 'Combobulating' and 'Finagling'), followed by a human review (that would be me) before publishing.
+
+The automation is an [open-source project](https://github.com/jst-cyr/puppetlabs-modules-roundup-writer) with deterministic python scripts to crawl the Forge and determine which `puppetlabs` modules were released during a specific month (and catching when a module gets more than one release in a month). By combining a template, automation scripts, and some AI orchestration the content all gets pulled together for a structured markdown document. I then jump in to double-check the content and update any wording that seems repetitive or irrelevant (and sometimes I need to add some extra context that isn't in the changelog notes).

@@ -26,6 +26,16 @@ except ImportError:
     sys.exit(1)
 
 
+# Static AI usage disclosure appended to the bottom of every roundup.
+# This text is intentionally identical for every post, so it lives here rather
+# than being generated on each run.
+AI_DISCLOSURE = """## 🤖 AI Disclosure
+
+This roundup is produced by a mostly-automated pipeline, with some AI sprinkled in for orchestration and enrichment (or 'Combobulating' and 'Finagling'), followed by a human review (that would be me) before publishing.
+
+The automation is an [open-source project](https://github.com/jst-cyr/puppetlabs-modules-roundup-writer) with deterministic python scripts to crawl the Forge and determine which `puppetlabs` modules were released during a specific month (and catching when a module gets more than one release in a month). By combining a template, automation scripts, and some AI orchestration the content all gets pulled together for a structured markdown document. I then jump in to double-check the content and update any wording that seems repetitive or irrelevant (and sometimes I need to add some extra context that isn't in the changelog notes)."""
+
+
 class RoundupGenerator:
     """Generate final roundup markdown from curated highlights and release notes."""
 
@@ -486,6 +496,9 @@ class RoundupGenerator:
         for paragraph in closing_paragraphs:
             markdown.append(paragraph)
             markdown.append("")
+
+        markdown.append(AI_DISCLOSURE)
+        markdown.append("")
 
         return "\n".join(markdown)
 
