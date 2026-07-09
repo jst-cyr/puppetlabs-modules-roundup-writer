@@ -2,9 +2,7 @@
 
 **Tags:** #puppet
 
-June 2026 brought 24 Puppetlabs module releases to the Forge, ranging from a brand-new Windows security policy module to a large batch of third-party CVE fixes in Security Compliance Management. This roundup pulls the most important changes into one place.
-
-Across the month, the clearest patterns were a coordinated stdlib 10.x compatibility pass and the ongoing Puppetcore alignment work dropping Puppet 7 support, so most of the module list below is maintenance and compatibility work rather than large feature launches.
+In June 2026 we saw the release of a new `stdlib 10` that was mentioned [in an earlier article](https://dev.to/puppet/what-you-need-to-know-about-the-new-puppetlabs-stdlib-10-in-june-2026-1jah) along with numerous modules bumped to use the new stdlib 10. In total, 24 Puppetlabs modules were released to the Forge, ranging from a brand-new Windows security policy module to a large batch of third-party CVE fixes in Security Compliance Management. This roundup pulls the most important changes into one place.
 
 ## Highlighted Updates
 
@@ -21,11 +19,15 @@ A coordinated maintenance pass loosened the puppetlabs/stdlib dependency constra
 
 - Affected modules: accounts, apache, apt, chocolatey, concat, docker, firewall, haproxy, inifile, lvm, motd, mysql, ntp, postgresql, wsus_client.
 
+More modules will be released in July as we roll out the support for stdlib 10.x.
+
 ### Puppetcore Alignment / Puppet 7 Support Dropped
 
 Several modules completed their Puppetcore alignment pass this month, dropping Puppet 7 support in favor of Puppet 8 as Puppet 7 reaches end-of-life.
 
 - Affected modules: accounts, chocolatey, haproxy, java, motd, mysql, postgresql, stdlib.
+
+A note that the change to drop Puppet 7 in postgresql was done in a patch release, instead of a major release. This has been corrected in postgresql 10.6.3 and the change will be done again in a major release of that module.
 
 ### Security Compliance Management Patches ~40 CVEs
 
@@ -80,7 +82,7 @@ A small release that only bumps the stdlib dependency to allow 10.x.
 
 This release allows the ruby_task_helper dependency to move to 1.x.
 
-- Allow ruby_task_helper 1.x
+- Allow ruby_task_helper 1.x [#25](https://github.com/puppetlabs/puppetlabs-aws_inventory/pull/25) ([bastelfreak](https://github.com/bastelfreak))
 
 ---
 
@@ -88,9 +90,9 @@ This release allows the ruby_task_helper dependency to move to 1.x.
 
 📅 Latest release: 2026-06-29 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/chocolatey))
 
-Completes its Puppetcore alignment pass, improves package prefetch caching with case-insensitive matching, and allows stdlib 10.x.
+Completes its Puppet Core alignment pass, improves package prefetch caching with case-insensitive matching, and allows stdlib 10.x.
 
-- (CAT-2369) Puppetcore update [#378](https://github.com/puppetlabs/puppetlabs-chocolatey/pull/378) ([LukasAud](https://github.com/LukasAud))
+- (CAT-2369) Puppet Core update [#378](https://github.com/puppetlabs/puppetlabs-chocolatey/pull/378) ([LukasAud](https://github.com/LukasAud))
 - (MODULES-11769) Cache prefetch results and match packages case-insensitively [#388](https://github.com/puppetlabs/puppetlabs-chocolatey/pull/388) ([skyamgarp](https://github.com/skyamgarp))
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#387](https://github.com/puppetlabs/puppetlabs-chocolatey/pull/387) ([imaqsood](https://github.com/imaqsood))
 
@@ -134,7 +136,7 @@ Check the official [release notes for complyadm 3.8.0](https://help.puppet.com/s
 
 📅 Latest release: 2026-06-25 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/concat))
 
-A small release that only bumps the stdlib dependency to allow 10.x.
+This targeted release was part of the wave of bumps for the stdlib dependency to allow 10.x.
 
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#837](https://github.com/puppetlabs/puppetlabs-concat/pull/837) ([imaqsood](https://github.com/imaqsood))
 
@@ -156,7 +158,7 @@ Removes the upper version limit on the puppetlabs/apt dependency, fixes `compose
 
 📅 Latest release: 2026-06-25 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/edgeops))
 
-Adds host key fingerprint verification for Bolt 5.1.0+ targets, along with a large batch of NETCONF/SSH hardening fixes.
+Adds host key fingerprint verification for Bolt 5.1.0+ targets, along with a batch of NETCONF/SSH hardening fixes.
 
 - (PE-43703) Verify host key fingerprints supplied as `host-key-fingerprint` in the target hash; takes precedence over `host-key-check` and requires Bolt 5.1.0+. [#38](https://github.com/puppetlabs/puppetlabs-edgeops/pull/38) ([owenbeckles](https://github.com/owenbeckles))
 - (PE-42584) Correctly handle host key verification parameter [#23](https://github.com/puppetlabs/puppetlabs-edgeops/pull/23) ([Ziaunys](https://github.com/Ziaunys))
@@ -198,7 +200,7 @@ Completes the module's Puppet 8 upgrade work, drops Puppet 7 support, and allows
 
 📅 Latest release: 2026-06-25 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/inifile))
 
-A small release that only bumps the stdlib dependency to allow 10.x.
+A small release to allow stdlib 10.x.
 
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#570](https://github.com/puppetlabs/puppetlabs-inifile/pull/570) ([imaqsood](https://github.com/imaqsood))
 
@@ -208,9 +210,9 @@ A small release that only bumps the stdlib dependency to allow 10.x.
 
 📅 Latest release: 2026-06-29 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/java))
 
-Completes its Puppetcore update, adds CentOS 9 and Debian 13 support, allows stdlib 10.x, and adds support for downloading from a login/password-protected URL.
+Adds CentOS 9 and Debian 13 support, allows stdlib 10.x, and adds support for downloading from a login/password-protected URL.
 
-- (CAT-2376) Puppetcore update [#614](https://github.com/puppetlabs/puppetlabs-java/pull/614) ([LukasAud](https://github.com/LukasAud))
+- (CAT-2376) Puppet Core update [#614](https://github.com/puppetlabs/puppetlabs-java/pull/614) ([LukasAud](https://github.com/LukasAud))
 - (CAT-2152) Add support for CentOS 9 [#606](https://github.com/puppetlabs/puppetlabs-java/pull/606) ([skyamgarp](https://github.com/skyamgarp))
 - Add support for Debian 13 (trixie) [#613](https://github.com/puppetlabs/puppetlabs-java/pull/613) ([mika](https://github.com/mika))
 - Feat: Allow downloading from a login/password protected URL [#588](https://github.com/puppetlabs/puppetlabs-java/pull/588) ([JGodin-C2C](https://github.com/JGodin-C2C))
@@ -222,7 +224,7 @@ Completes its Puppetcore update, adds CentOS 9 and Debian 13 support, allows std
 
 📅 Latest release: 2026-06-28 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/lvm))
 
-A small release that only bumps the stdlib dependency to allow 10.x.
+This lvm release bumps the stdlib dependency to allow 10.x.
 
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#384](https://github.com/puppetlabs/puppetlabs-lvm/pull/384) ([imaqsood](https://github.com/imaqsood))
 
@@ -232,9 +234,9 @@ A small release that only bumps the stdlib dependency to allow 10.x.
 
 📅 Latest release: 2026-06-29 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/motd))
 
-Completes its Puppetcore update, adds Bolt 5.0 support, and allows stdlib 10.x.
+Adds Bolt 5.0 support, and allows stdlib 10.x.
 
-- (CAT-2352) Puppetcore update [#531](https://github.com/puppetlabs/puppetlabs-motd/pull/531) ([LukasAud](https://github.com/LukasAud))
+- (CAT-2352) Puppet Core update [#531](https://github.com/puppetlabs/puppetlabs-motd/pull/531) ([LukasAud](https://github.com/LukasAud))
 - (CAT-2463) Add bolt 5.0 support [#535](https://github.com/puppetlabs/puppetlabs-motd/pull/535) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#558](https://github.com/puppetlabs/puppetlabs-motd/pull/558) ([imaqsood](https://github.com/imaqsood))
 
@@ -244,9 +246,9 @@ Completes its Puppetcore update, adds Bolt 5.0 support, and allows stdlib 10.x.
 
 📅 Latest release: 2026-06-29 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/mysql))
 
-Completes its Puppetcore update, fixes the RHEL/CentOS Stream 10 version check, and allows stdlib 10.x.
+Fixes the RHEL/CentOS Stream 10 version check, and allows stdlib 10.x.
 
-- (CAT-2381) Puppetcore update [#1688](https://github.com/puppetlabs/puppetlabs-mysql/pull/1688) ([LukasAud](https://github.com/LukasAud))
+- (CAT-2381) Puppet Core update [#1688](https://github.com/puppetlabs/puppetlabs-mysql/pull/1688) ([LukasAud](https://github.com/LukasAud))
 - Fix version check for RHEL/CentOS Stream 10 [#1686](https://github.com/puppetlabs/puppetlabs-mysql/pull/1686) ([kajinamit](https://github.com/kajinamit))
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#1707](https://github.com/puppetlabs/puppetlabs-mysql/pull/1707) ([imaqsood](https://github.com/imaqsood))
 
@@ -280,6 +282,8 @@ Adds support for installing and upgrading to Puppet Enterprise 2023.8.10 and 202
 📅 Latest release: 2026-06-29 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/postgresql))
 
 Adds basic EL10 support, allows both stdlib and concat to move to their 10.x releases, and fixes a bug where `postgresql_conf` resources set to absent were handled incorrectly.
+
+**NOTE:** This release also incorrectly removed Puppet 7 support as a breaking change in a patch release. This has since been rolled back in 10.6.3. Removing Puppet 7 support will happen in a future major release.
 
 - add EL10 basic support - align EL10 PGSQL 16 default package version [#1650](https://github.com/puppetlabs/puppetlabs-postgresql/pull/1650) ([ikonia](https://github.com/ikonia))
 - fix: ignore postgresql_conf resource value when set to absent [#1657](https://github.com/puppetlabs/puppetlabs-postgresql/pull/1657) ([davidassigbi](https://github.com/davidassigbi))
@@ -322,9 +326,9 @@ Brand-new module for managing Windows local security policy. Provides the `secur
 
 📅 Latest release: 2026-06-30 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/stdlib))
 
-Completes its Puppetcore upgrade by dropping Puppet 7 support, adds CentOS 9 support, extends Sensitive value support to more functions, and fixes `has_ip_address`/`has_ip_network`.
+Drops Puppet 7 support, adds CentOS 9 support, extends Sensitive value support to more functions, and fixes `has_ip_address`/`has_ip_network`.
 
-- (CAT-2395) Puppetcore upgrade - drop support for Puppet 7 [#1457](https://github.com/puppetlabs/puppetlabs-stdlib/pull/1457) ([LukasAud](https://github.com/LukasAud))
+- (CAT-2395) Puppet Core upgrade - drop support for Puppet 7 [#1457](https://github.com/puppetlabs/puppetlabs-stdlib/pull/1457) ([LukasAud](https://github.com/LukasAud))
 - (CAT-2152) Add support for CentOS 9 [#1442](https://github.com/puppetlabs/puppetlabs-stdlib/pull/1442) ([skyamgarp](https://github.com/skyamgarp))
 - Support `Sensitive` values in more functions [#1463](https://github.com/puppetlabs/puppetlabs-stdlib/pull/1463) ([alexjfisher](https://github.com/alexjfisher))
 - Support sensitive values in `to_json_pretty` [#1418](https://github.com/puppetlabs/puppetlabs-stdlib/pull/1418) ([alexjfisher](https://github.com/alexjfisher))
@@ -336,7 +340,7 @@ Completes its Puppetcore upgrade by dropping Puppet 7 support, adds CentOS 9 sup
 
 📅 Latest release: 2026-06-25 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/wsus_client))
 
-A small release that only bumps the stdlib dependency to allow 10.x.
+stdlib 10.x now allowed as part of the dependency range bump.
 
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#238](https://github.com/puppetlabs/puppetlabs-wsus_client/pull/238) ([imaqsood](https://github.com/imaqsood))
 
