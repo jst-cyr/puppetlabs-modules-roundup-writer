@@ -21,9 +21,9 @@ A coordinated maintenance pass loosened the puppetlabs/stdlib dependency constra
 
 More modules will be released in July as we roll out the support for stdlib 10.x.
 
-### Puppetcore Alignment / Puppet 7 Support Dropped
+### Puppet Core Alignment / Puppet 7 Support Dropped
 
-Several modules completed their Puppetcore alignment pass this month, dropping Puppet 7 support in favor of Puppet 8 as Puppet 7 reaches end-of-life.
+Several modules completed their Puppet Core alignment pass this month, dropping Puppet 7 support in favor of Puppet 8 as Puppet 7 reaches end-of-life.
 
 - Affected modules: accounts, chocolatey, haproxy, java, motd, mysql, postgresql, stdlib.
 
@@ -45,9 +45,9 @@ The following is an alphabetical listing of modules which received updates in Ju
 
 📅 Latest release: 2026-06-29 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/accounts))
 
-This release drops Puppet 7 support (**BREAKING**) as part of the module's Puppetcore alignment work, and allows the stdlib dependency to move to 10.x.
+This release drops Puppet 7 support (**BREAKING**) as part of the module's Puppet Core alignment work, and allows the stdlib dependency to move to 10.x.
 
-- (CAT-2352) Drop Puppet 7 support (BREAKING) — Puppetcore alignment [#509](https://github.com/puppetlabs/puppetlabs-accounts/pull/509) ([LukasAud](https://github.com/LukasAud))
+- (CAT-2352) Drop Puppet 7 support (BREAKING) — Puppet Core alignment [#509](https://github.com/puppetlabs/puppetlabs-accounts/pull/509) ([LukasAud](https://github.com/LukasAud))
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#513](https://github.com/puppetlabs/puppetlabs-accounts/pull/513) ([imaqsood](https://github.com/imaqsood))
 
 ---
