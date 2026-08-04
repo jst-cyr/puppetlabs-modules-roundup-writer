@@ -10,7 +10,7 @@
 # whether their PRs reference internal ticket prefixes like CAT-/PE-/MODULES-, or
 # just ask around) and add them to the appropriate list below.
 #
-# Last reviewed: 2026-07 (June 2026 roundup)
+# Last reviewed: 2026-08 (July 2026 roundup)
 
 internal:
   - imaqsood          # Perforce Puppet engineer
@@ -19,11 +19,14 @@ internal:
   - owenbeckles        # Puppet/Perforce (puppetlabs)
   - mcdonaldseanp      # Puppet/Perforce (puppetlabs)
   - david22swan        # Public puppetlabs org member
-  - skyamgarp          # Puppet/Perforce
+  - skyamgarp           # Puppet/Perforce
   - gavindidrichsen    # Puppet/Perforce
   - Ziaunys            # Perforce
   - SugatD             # Puppet/Perforce
   - CharithaDunuwille  # Puppet/Perforce (peadm maintainer)
+  - jst-cyr            # Perforce Puppet (repo owner)
+  - shubhamshinde360   # Perforce Puppet engineer (CAT- ticket prefix)
+  - amitkarsale        # Perforce Puppet engineer (CAT- ticket prefix)
 
 # Contributors confirmed NOT to be Puppet/Perforce employees. Listing them
 # explicitly (instead of just leaving them unclassified) lets the script tell
@@ -39,3 +42,9 @@ community:
   - deligatedgeek
   - davidassigbi
   - JGodin-C2C
+  - deric
+  - trefzer
+  - cocker-cc
+  - matejzero
+  - zaben903
+  - binford2k
