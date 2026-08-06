@@ -2,36 +2,36 @@
 
 **Tags:** #puppet
 
-July 2026 brought 17 Puppetlabs module releases, headlined by the largest Continuous Delivery release of the year: cd4peadm 5.16.0 adds external PostgreSQL database support and a configurable image pull policy, and closes 11 CVEs, alongside a breaking change to commit status contexts. Elsewhere, five modules continued the Puppet Core alignment pass by dropping Puppet 7 support, four more modules picked up the stdlib 10.x rollout that started in June, and three Windows-focused modules added Windows Server 2025 support. This roundup pulls the most important changes into one place.
+July 2026 brought 17 Puppetlabs module releases, headlined by a fairly large Continuous Delivery release. cd4peadm 5.16.0 added external PostgreSQL database support and a configurable image pull policy, and closes 11 CVEs, alongside a breaking change to commit status contexts. More modules dropped Puppet 7 support, some others picked up stdlib 10, and Windows Server 2025 support started rolling out into the modules. This roundup pulls the most important changes into one place.
 
 ## Highlighted Updates
 
 ### Continuous Delivery Adds External Databases, Configurable Image Pull Policies, and Closes 11 CVEs
 
-cd4peadm 5.16.0 is the biggest release of the month. It adds support for pointing Continuous Delivery at an externally managed PostgreSQL database — a self-managed instance, Amazon RDS for PostgreSQL, or Amazon Aurora — instead of the database CD manages internally, giving operators control over durability, backups, and high availability. It also adds a configurable `image_pull_policy` option for job templates (`Always`/`IfNotPresent`/`Never`) and removes the `docker.io` fallback when using Podman; the matching cd4pe_jobs 1.7.4 release adds the same task parameter and fallback removal, so upgrade both together.
+cd4peadm 5.16.0 is the biggest release of the month. It adds support for pointing Continuous Delivery at an externally managed PostgreSQL database. That could be a self-managed instance, Amazon RDS for PostgreSQL, or Amazon Aurora. This externally managed db can be used instead of the database CD manages internally, giving operators control over durability, backups, and high availability. It also adds a configurable `image_pull_policy` option for job templates (`Always`/`IfNotPresent`/`Never`) and removes the `docker.io` fallback when using Podman; the matching cd4pe_jobs 1.7.4 release adds the same task parameter and fallback removal, so upgrade both together.
 
-- **BREAKING:** Commit status contexts now include the pipeline name (`cd-pe/<pipelineName>/stage-<N>` instead of `cd-pe/stage-<N>`) — review any branch protection rules or required status checks that reference the old format.
-- Closes 11 CVEs across opentelemetry, NGINX, jetty, jackson, log4j, postgresql, golang.org/x/sys, and react-router.
+- **BREAKING:** Commit status contexts now include the pipeline name (`cd-pe/<pipelineName>/stage-<N>` instead of `cd-pe/stage-<N>`). Review any branch protection rules or required status checks that reference the old format.
+- This release also closed 11 CVEs across opentelemetry, NGINX, jetty, jackson, log4j, postgresql, golang.org/x/sys, and react-router.
 
-### Puppet Core Alignment / Puppet 7 Support Dropped
+### Puppet 7 Support Dropped
 
-Five modules completed Puppet Core alignment passes this month, dropping Puppet 7 support in major version bumps as Puppet 7 nears end-of-life.
+Five modules dropped Puppet 7 support in major version bumps: 
 
-- Affected modules: haproxy, iis, mount_iso, scheduled_task, sslcertificate.
+- haproxy, iis, mount_iso, scheduled_task, sslcertificate.
 
-Unlike June's postgresql misstep — where the Puppet 7 removal shipped in a patch release instead of a major one — this month's Puppet Core work all landed in proper major version bumps. Speaking of which, postgresql 10.6.3 restores the Puppet 7 support that 10.6.2 broke; see its entry below.
+There were all released as major version bumps to ensure that users still working on upgrading from Puppet 7 can stay pinned on the previous major version releases. 
+
+In related news, postgresql 10.6.3 restored the Puppet 7 support that 10.6.2 broke in a previous release; see its entry below.
 
 ### stdlib 10.x Rollout Continues
 
-Following June's stdlib 10.x rollout — which noted more modules would follow in July — four more modules now allow the puppetlabs-stdlib dependency to move to 10.x: haproxy, mount_iso, puppet_authorization, and sslcertificate. haproxy also widens its concat constraint to 10.x.
+Following June's stdlib 10.x rollout, four more modules now allow the puppetlabs-stdlib dependency to move to 10.x: haproxy, mount_iso, puppet_authorization, and sslcertificate. haproxy also widens its concat constraint to 10.x.
 
 - Affected modules: haproxy, mount_iso, puppet_authorization, sslcertificate.
 
 ### Windows Server 2025 Support Added
 
-Three Windows-focused modules — scheduled_task, windows_env, and windows_eventlog — add support for Windows Server 2025 this month.
-
-- Affected modules: scheduled_task, windows_env, windows_eventlog.
+Three Windows-focused modules added support for Windows Server 2025 this month: scheduled_task, windows_env, and windows_eventlog. These now all run acceptance testing against the 2025 version of the OS, in addition to other supported Windows versions.
 
 ## What Updates Happened to Puppetlabs Modules in July 2026?
 
@@ -43,7 +43,7 @@ The following is an alphabetical listing of modules which received updates in Ju
 
 📅 Latest release: 2026-07-23 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/apache))
 
-Scaffolds OWASP ModSecurity Core Rule Set v4 support on EL10 via a new `crs_source` enum — a foundational step, not full CRS v4 support yet.
+Added OWASP CRS v4 support on modern Enterprise Linux (EL10) while preserving existing EL7/8/9 behaviour.
 
 - (MODULES-11857) Scaffold OWASP CRS v4 support on EL10 via crs_source enum [#2637](https://github.com/puppetlabs/puppetlabs-apache/pull/2637) ([SugatD](https://github.com/SugatD))
 
@@ -64,7 +64,7 @@ Adds the same configurable `image_pull_policy` task parameter and Podman fallbac
 
 📅 Latest release: 2026-07-29 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/cd4peadm))
 
-The largest Continuous Delivery release of the month: adds external PostgreSQL database support, a configurable image pull policy, source control token management improvements, and closes 11 CVEs. Also ships a breaking change to commit status contexts — see below.
+The changes this month added external PostgreSQL database support, a configurable image pull policy, source control token management improvements, and closed 11 CVEs. There is also a breaking change to commit status contexts — see below (and the linked release notes).
 
 - Added support for external databases. You can now point Continuous Delivery at a PostgreSQL instance you operate yourself, Amazon RDS for PostgreSQL, Amazon Aurora (PostgreSQL-compatible), or a self-managed PostgreSQL server, instead of the database CD manages for you. This gives you control over durability, backups, and high availability. You can configure external mode on a fresh install or migrate an existing managed install.
 - Added a feature to Continuous Delivery job templates so you can set an image pull policy per job (`Always`, `IfNotPresent`, or `Never`). In an air-gapped environment, for example, setting the policy to `Never` stops Continuous Delivery's attempts to reach out to the internet for the image.
@@ -80,7 +80,7 @@ Check the official [release notes for cd4peadm 5.16.0](https://help.puppet.com/c
 
 📅 Latest release: 2026-07-03 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/comply))
 
-A Security Compliance Management maintenance release — no new CVE fixes this time, mostly operational and licensing improvements.
+A Security Compliance Management maintenance release that did not have any new CVE fixes this time and was mostly operational and licensing improvements.
 
 - Increased the CIS-CAT Pro Assessor license expiry time; licenses are now good for a full year.
 - Added a `license_path` parameter to update the CIS-CAT Pro Assessor license without upgrading SCM.
@@ -96,7 +96,7 @@ Check the official [release notes for comply 3.8.1](https://help.puppet.com/scm/
 
 📅 Latest release: 2026-07-28 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/haproxy))
 
-Two releases this month: 9.0.0 drops Puppet 7 support (**BREAKING**) and adds `cache` resource support, while 9.1.0 removes a sensitive-data workaround and allows both stdlib and concat to move to their 10.x releases.
+Two releases this month: 9.0.0 dropped Puppet 7 support (**BREAKING**) and added `cache` resource support, while 9.1.0 removed a sensitive-data workaround and allows both stdlib and concat to move to their 10.x releases.
 
 Includes monthly releases: 9.1.0 (2026-07-28), 9.0.0 (2026-07-20).
 
@@ -117,7 +117,7 @@ Includes monthly releases: 9.1.0 (2026-07-28), 9.0.0 (2026-07-20).
 
 📅 Latest release: 2026-07-01 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/iis))
 
-Drops Puppet 7 support (**BREAKING**) as part of the module's Puppet Core update, and marks the `iis_application_pool` password parameter as sensitive so it no longer leaks into Puppet reports.
+Dropped Puppet 7 support (**BREAKING**) as part of ongoing modernization efforts, and marked the `iis_application_pool` password parameter as sensitive so it no longer leaks into Puppet reports.
 
 - (CAT-2374) Puppet Core update (BREAKING) — drops Puppet 7 support [#414](https://github.com/puppetlabs/puppetlabs-iis/pull/414) ([LukasAud](https://github.com/LukasAud))
 - (MODULES-11595) Mark iis_application_pool password as sensitive to stop report leak [#418](https://github.com/puppetlabs/puppetlabs-iis/pull/418) ([imaqsood](https://github.com/imaqsood))
@@ -128,7 +128,7 @@ Drops Puppet 7 support (**BREAKING**) as part of the module's Puppet Core update
 
 📅 Latest release: 2026-07-22 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/mount_iso))
 
-Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, and allows the stdlib dependency to move to 10.x.
+Dropped Puppet 7 support (**BREAKING**) and allowed the stdlib dependency to move to 10.x.
 
 - (CAT-2380) Update for Puppet Core / Drop Support for Puppet 7 (BREAKING) [#58](https://github.com/puppetlabs/puppetlabs-mount_iso/pull/58) ([david22swan](https://github.com/david22swan))
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#59](https://github.com/puppetlabs/puppetlabs-mount_iso/pull/59) ([imaqsood](https://github.com/imaqsood))
@@ -139,7 +139,7 @@ Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, and allow
 
 📅 Latest release: 2026-07-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/mysql))
 
-Adds support for RHEL 10.
+This month was a small update but important as RHEL 10 support was added.
 
 - (MODULES-11802) Add support for RHEL 10 [#1712](https://github.com/puppetlabs/puppetlabs-mysql/pull/1712) ([skyamgarp](https://github.com/skyamgarp))
 
@@ -212,7 +212,7 @@ Check the official [release notes for sce_linux 2.8.0](https://help.puppet.com/s
 
 📅 Latest release: 2026-07-13 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/scheduled_task))
 
-Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core upgrade, and adds Windows Server 2025 support.
+Drops Puppet 7 support (**BREAKING**) and also adds Windows Server 2025 support.
 
 - (CAT-2391) Puppet Core upgrade (BREAKING) — drops Puppet 7 support [#271](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/271) ([LukasAud](https://github.com/LukasAud))
 - [MODULES-11616] Adding Windows 2025 support to module [#275](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/275) ([jst-cyr](https://github.com/jst-cyr))
@@ -224,7 +224,7 @@ Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core upgrade, and adds
 
 📅 Latest release: 2026-07-22 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/sslcertificate))
 
-Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, and allows the stdlib dependency to move to 10.x.
+Drops Puppet 7 support (**BREAKING**) and allows the stdlib dependency to move to 10.x.
 
 - (CAT-2394) Puppet Core update (BREAKING) — drops Puppet 7 support [#142](https://github.com/puppetlabs/puppetlabs-sslcertificate/pull/142) ([LukasAud](https://github.com/LukasAud))
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#143](https://github.com/puppetlabs/puppetlabs-sslcertificate/pull/143) ([imaqsood](https://github.com/imaqsood))
@@ -251,15 +251,13 @@ Adds Windows Server 2025 support.
 
 ## Until Next Time!
 
-That wraps up the July 2026 roundup. If any of these modules intersect with your environment — especially the cd4peadm breaking change to commit status contexts, and the Puppet 7 removals across haproxy, iis, mount_iso, scheduled_task, and sslcertificate — the linked Forge pages and release notes are worth a closer look before upgrading.
+That wraps up the July 2026 roundup. If any of these modules intersect with your environment. especially the cd4peadm breaking change to commit status contexts and the Puppet 7 removals, the linked Forge pages and release notes are worth a closer look before upgrading.
 
-Feedback on the series is always useful, especially if there are module families or release-note patterns that deserve more attention in future editions.
+Feedback on the series is always useful, especially if there are module families or release-note patterns that deserve more attention in future editions!
 
 More updates coming next month when the August 2026 releases land.
 
 ## 🤖 AI Disclosure
-
-<!-- Static text — emitted verbatim by scripts/04_generate_roundup.py (AI_DISCLOSURE). Keep the two in sync. -->
 
 This roundup is produced by a mostly-automated pipeline, with some AI sprinkled in for orchestration and enrichment (or 'Combobulating' and 'Finagling'), followed by a human review (that would be me) before publishing.
 
