@@ -10,7 +10,7 @@
 # whether their PRs reference internal ticket prefixes like CAT-/PE-/MODULES-, or
 # just ask around) and add them to the appropriate list below.
 #
-# Last reviewed: 2026-08 (July 2026 roundup)
+# Last reviewed: 2026-08 (module releases report, 2026-01-01 to 2026-08-01)
 
 internal:
   - imaqsood          # Perforce Puppet engineer
@@ -27,6 +27,17 @@ internal:
   - jst-cyr            # Perforce Puppet (repo owner)
   - shubhamshinde360   # Perforce Puppet engineer (CAT- ticket prefix)
   - amitkarsale        # Perforce Puppet engineer (CAT- ticket prefix)
+  - AriaXLi            # Puppet/Perforce (confirmed)
+  - ComplianceService  # Puppet/Perforce (confirmed)
+  - Jade2153           # Puppet/Perforce (confirmed)
+  - Ramesh7            # Puppet/Perforce (confirmed)
+  - albatrossflavour   # Puppet/Perforce (confirmed)
+  - danielmackle       # Puppet/Perforce (confirmed)
+  - ia-content         # Puppet/Perforce (confirmed)
+  - jonathannewman     # Puppet/Perforce (confirmed)
+  - joshcooper         # Puppet/Perforce (confirmed)
+  - mhashizume         # Puppet/Perforce (confirmed)
+  - span786            # Puppet/Perforce (confirmed)
 
 # Contributors confirmed NOT to be Puppet/Perforce employees. Listing them
 # explicitly (instead of just leaving them unclassified) lets the script tell
@@ -48,3 +59,22 @@ community:
   - matejzero
   - zaben903
   - binford2k
+  - Lightning-
+  - ashishrase
+  - bwitt
+  - davidmalloncares
+  - elfranne
+  - jcpunk
+  - jordanbreen28
+  - jpartlow
+  - kenyon
+  - kjetilho
+  - malikparvez
+  - mend-for-github-com
+  - moritz-makandra
+  - nabertrand
+  - rajat-puppet
+  - seamymckenna
+  - techsk8
+  - traylenator
+  - zen-fu
