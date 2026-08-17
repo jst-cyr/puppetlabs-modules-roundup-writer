@@ -213,3 +213,42 @@ Examples:
 Stored in `data/raw_html/{module}_{version}.html` for audit trail and reproducibility.
 
 Each snapshot is a gzipped archive of the exact HTML fetched, so if a changelog URL changes or docs are updated, you can still reference what was actually parsed.
+
+---
+
+## 6. Module Releases Report Schema
+
+**File**: `data/module_releases_report_{start:%Y%m%d}_{end:%Y%m%d}.csv` (e.g.
+`module_releases_report_20260101_20260817.csv`), produced by
+`scripts/report_module_releases.py` — a standalone tool, not one of the four pipeline stages
+above. See [MODULE_RELEASES_REPORT_SPEC.md](../MODULE_RELEASES_REPORT_SPEC.md) for the full
+design.
+
+One row per release (not per module — a module with 3 releases in the date range gets 3 rows),
+sorted by `release_date` ascending, then `module_name`, then `version` descending:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `module_name` | string | e.g. `stdlib` |
+| `version` | string | e.g. `10.0.2` |
+| `release_date` | `YYYY-MM-DD` | **UTC** date of the release, matching the convention already used elsewhere in this pipeline (and what's published in `posts/`) |
+| `num_changes` | int or blank | top-level changelog bullets found for this version |
+| `num_community_contributions` | int or blank | subset of those bullets credited to a handle listed under `community` in `config/internal_contributors.yaml` |
+| `num_unknown_contributions` | int or blank | subset credited to a handle in **neither** list — a to-do counter meaning `config/internal_contributors.yaml` needs updating, not a contribution type |
+
+**Blank vs. `0` is meaningful, not incidental:**
+
+- **Blank** = not knowable from the available source: no changelog section matched this
+  release's version at all (`num_changes` only), or this module's release notes carry no
+  GitHub attribution structure to count (`num_community_contributions` /
+  `num_unknown_contributions`, for modules whose release notes are prose docs on
+  help.puppet.com rather than a GitHub-hosted changelog).
+- **`0`** = knowable and genuinely zero — a changelog section was found and parsed
+  successfully; it simply had no bullets, or no community/unknown-credited bullets.
+
+The columns do not necessarily sum to `num_changes`: a bullet with no PR reference at all (a
+pure-maintenance change with nobody to credit) counts toward `num_changes` only, not either
+contribution column. The remainder after subtracting community + unknown from `num_changes` is
+internal-authored changes plus unattributed ones.
+
+Deleted/withdrawn releases (Forge's `deleted_at` set) are excluded entirely, never rowed.

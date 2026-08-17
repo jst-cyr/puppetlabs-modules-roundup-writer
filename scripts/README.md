@@ -11,6 +11,12 @@ This pipeline automates the mechanical parts of the roundup process while preser
 3. **Stage 3 (Curate)**: Auto-detect themes/highlights for human review
 4. **Stage 4 (Generate)**: Fill template with curated highlights and module entries
 
+Shared parsing/classification logic (Forge changelog parsing, external-docs parsing, PR
+attribution, internal/community classification, HTTP session setup, date-range resolution)
+lives in `scripts/lib/` and is imported by the numbered stages above rather than duplicated.
+`report_module_releases.py` (see [Standalone: Module Releases Report](#standalone-module-releases-report) below) is a separate tool built on that
+same shared library — it is not part of the four-stage pipeline.
+
 ## Prerequisites
 
 Install dependencies:
@@ -300,5 +306,38 @@ If Forge crawling fails, you can manually populate the JSON files:
    - Create manual entry in `data/march_2026_modules_discovered.json`
 3. Run Stage 2 (fetch_release_notes.py) as normal
 4. Continue with Stages 3-4
+
+## Standalone: Module Releases Report
+
+`report_module_releases.py` is **not** part of the four-stage pipeline above — it's a separate
+report tool for "how many modules released, and how much community contribution was in them"
+over an arbitrary date range, output as a CSV rather than a blog post. Use the
+`module-releases-report` skill / `/module-releases-report` command rather than invoking it
+directly; see [MODULE_RELEASES_REPORT_SPEC.md](../MODULE_RELEASES_REPORT_SPEC.md) for the full
+design.
+
+```bash
+python scripts/report_module_releases.py
+python scripts/report_module_releases.py --start-date 2026-01-01 --end-date 2026-08-17
+```
+
+**Output:** `data/module_releases_report_<start>_<end>.csv`, one row per release:
+`module_name, version, release_date, num_changes, num_community_contributions,
+num_unknown_contributions`. Blank vs. `0` in the count columns is meaningful — see
+`data/SCHEMA.md`.
+
+**Why this doesn't reuse Stages 1-2 directly:** those stages scrape Forge's rendered HTML pages
+one target month at a time. This report instead calls Forge's public `v3/modules` JSON API
+directly, which returns every puppetlabs module's complete release history (and, for
+Forge-hosted changelogs, the complete changelog markdown) inline in ~2 paginated requests total
+— cheaper and simpler for a report that can span many months. It shares the same bullet-parsing
+and contributor-classification logic as Stages 2 and 5 via `scripts/lib/`, just with a different
+data-fetching front end.
+
+**GitHub API use:** live PR-author lookups (for changelog bullets that reference a PR but don't
+already credit an author inline) are on by default, seeded first from a free cache mined from
+already-published `posts/*.md` files, with a per-run circuit breaker that disables further live
+lookups for the rest of the run the first time GitHub rate-limits a request. Pass
+`--no-github-lookups` to skip live lookups entirely.
 
 This preserves the benefits of Stages 2-4 (parsing, curation, validation) even if web scraping is problematic.

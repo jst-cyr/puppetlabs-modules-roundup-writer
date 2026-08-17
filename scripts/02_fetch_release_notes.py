@@ -18,9 +18,10 @@ Behavior:
 """
 
 import argparse
+import calendar
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import re
@@ -35,15 +36,22 @@ except ImportError:
     print("    pip install requests beautifulsoup4", file=sys.stderr)
     sys.exit(1)
 
+from lib import http_common, changelog_parse, external_docs
+
+
+def _month_bounds(year: int, month: int) -> Tuple[date, date]:
+    """First and last calendar day of the given month."""
+    last_day = calendar.monthrange(year, month)[1]
+    return date(year, month, 1), date(year, month, last_day)
+
 
 class ReleaseNotesFetcher:
     """Fetch and parse release notes from Forge and external sources."""
-    
+
     FORGE_BASE_URL = "https://forge.puppet.com"
-    
+
     def __init__(self, config_path: Optional[Path] = None):
-        self.session = requests.Session()
-        self.session.headers.update({'User-Agent': 'puppetlabs-roundup-bot/1.0'})
+        self.session = http_common.make_session()
         # Cache of PR URL -> author login (or None) so we hit the GitHub API at
         # most once per PR. GitHub's unauthenticated API is rate limited to 60
         # requests/hour per IP, so we only look up PRs that lack attribution.
@@ -132,8 +140,19 @@ class ReleaseNotesFetcher:
                 'latest_release_date': fallback_release_date,
             }
 
-        all_sections = self._extract_markdown_release_sections(changelog)
-        monthly_sections = self._filter_sections_by_month(all_sections, target_month, target_year)
+        # `bullet_transform` reproduces the original inline enrich-then-dedupe
+        # order (each bullet was enriched with PR attribution as it was
+        # flushed, *before* the section's dedupe/limit pass ran).
+        enrich = lambda bullet: changelog_parse.enrich_bullet_attribution(
+            bullet, self.session, self._pr_author_cache
+        )
+        all_sections = changelog_parse.extract_release_sections(changelog, bullet_transform=enrich)
+
+        if target_month and target_year:
+            start, end = _month_bounds(target_year, target_month)
+            monthly_sections = changelog_parse.filter_sections_by_range(all_sections, start, end)
+        else:
+            monthly_sections = all_sections
 
         if not monthly_sections:
             # Fall back to the specific latest version for backwards compatibility.
@@ -155,7 +174,7 @@ class ReleaseNotesFetcher:
         releases_in_month: List[Dict] = []
 
         for section in monthly_sections:
-            section_bullets = self._dedupe_and_limit(section.get('bullets', []), limit=None)
+            section_bullets = changelog_parse.dedupe_and_limit(section.get('bullets', []), limit=None)
             releases_in_month.append(
                 {
                     'version': section.get('version', ''),
@@ -167,7 +186,7 @@ class ReleaseNotesFetcher:
 
         latest = monthly_sections[0]
         return {
-            'parsed_bullets': self._dedupe_and_limit(rolled_up_bullets, limit=None),
+            'parsed_bullets': changelog_parse.dedupe_and_limit(rolled_up_bullets, limit=None),
             'releases_in_month': releases_in_month,
             'latest_version': latest.get('version') or latest_version,
             'latest_release_date': fallback_release_date or latest.get('release_date') or '',
@@ -194,78 +213,6 @@ class ReleaseNotesFetcher:
             return changelog
         return ''
 
-    def _extract_markdown_release_sections(self, changelog: str) -> List[Dict]:
-        """Extract version/date scoped sections from markdown changelog."""
-        lines = changelog.splitlines()
-        sections: List[Dict] = []
-        current_heading = ''
-        current_lines: List[str] = []
-
-        for line in lines:
-            if line.startswith('## '):
-                if current_heading:
-                    section = self._build_release_section(current_heading, current_lines)
-                    if section:
-                        sections.append(section)
-                current_heading = line.strip()
-                current_lines = []
-                continue
-
-            if current_heading:
-                current_lines.append(line)
-
-        if current_heading:
-            section = self._build_release_section(current_heading, current_lines)
-            if section:
-                sections.append(section)
-
-        # Sort most recent first by release_date, with unknown dates last.
-        sections.sort(key=lambda s: s.get('release_date') or '', reverse=True)
-        return sections
-
-    def _build_release_section(self, heading: str, section_lines: List[str]) -> Optional[Dict]:
-        """Build a release section record from a markdown heading and body lines."""
-        version_match = re.search(r'\b(?:v)?(\d+\.\d+\.\d+(?:[-+][A-Za-z0-9._-]+)?)\b', heading)
-        if not version_match:
-            return None
-
-        release_date_match = re.search(r'\b(20\d{2}-\d{2}-\d{2})\b', heading)
-        release_date = release_date_match.group(1) if release_date_match else ''
-
-        bullets = self._bullets_from_lines(section_lines)
-
-        return {
-            'version': version_match.group(1),
-            'release_date': release_date,
-            'bullets': self._dedupe_and_limit(bullets, limit=None),
-        }
-
-    def _filter_sections_by_month(
-        self,
-        sections: List[Dict],
-        target_month: Optional[int],
-        target_year: Optional[int],
-    ) -> List[Dict]:
-        """Filter release sections by target month/year."""
-        if not target_month or not target_year:
-            return sections
-
-        filtered: List[Dict] = []
-        for section in sections:
-            release_date = section.get('release_date', '')
-            if not release_date:
-                continue
-
-            try:
-                parsed = datetime.strptime(release_date, '%Y-%m-%d')
-            except ValueError:
-                continue
-
-            if parsed.month == target_month and parsed.year == target_year:
-                filtered.append(section)
-
-        return filtered
-    
     def fetch_from_external_docs(self, module_name: str, version: str, docs_url: str, parser_type: Optional[str] = None) -> Optional[Dict]:
         """
         Fetch release notes from external docs (help.puppet.com).
@@ -294,7 +241,7 @@ class ReleaseNotesFetcher:
         
         # Parse HTML to extract bullets based on parser type
         if parser_type == 'madcap_flare':
-            full_bullets = self._parse_madcap_flare(
+            full_bullets = external_docs.parse_madcap_flare(
                 html_content,
                 anchor=anchor,
                 version=version,
@@ -302,9 +249,9 @@ class ReleaseNotesFetcher:
                 limit=None,
             )
         else:
-            full_bullets = self._parse_external_docs(html_content, limit=None)
+            full_bullets = external_docs.parse_external_docs(html_content, limit=None)
 
-        bullets = self._dedupe_and_limit(full_bullets, limit=5)
+        bullets = changelog_parse.dedupe_and_limit(full_bullets, limit=5)
         
         return {
             'source': 'external_docs',
@@ -340,7 +287,7 @@ class ReleaseNotesFetcher:
                         return markdown_bullets
             except (json.JSONDecodeError, TypeError):
                 pass
-        
+
         bullets: List[str] = []
 
         # Try to find the release heading that contains the target version.
@@ -358,7 +305,7 @@ class ReleaseNotesFetcher:
             node = version_heading.find_next_sibling()
             while node is not None and getattr(node, 'name', None) not in heading_tags:
                 for li in node.find_all('li'):
-                    text = self._clean_text(li.get_text(' ', strip=True))
+                    text = changelog_parse.clean_text(li.get_text(' ', strip=True))
                     if text:
                         bullets.append(text)
                 node = node.find_next_sibling()
@@ -366,11 +313,11 @@ class ReleaseNotesFetcher:
         # Fallback: take meaningful list items from the page.
         if not bullets:
             for li in soup.find_all('li'):
-                text = self._clean_text(li.get_text(' ', strip=True))
+                text = changelog_parse.clean_text(li.get_text(' ', strip=True))
                 if text:
                     bullets.append(text)
 
-        return self._dedupe_and_limit(bullets, limit=5)
+        return changelog_parse.dedupe_and_limit(bullets, limit=5)
 
     def _extract_markdown_bullets_for_version(self, changelog: str, version: str) -> List[str]:
         """Extract bullets from the markdown section for the requested version."""
@@ -390,381 +337,13 @@ class ReleaseNotesFetcher:
             if in_section:
                 section_lines.append(line)
 
-        bullets = self._bullets_from_lines(section_lines)
-        return self._dedupe_and_limit(bullets, limit=5)
-    
-    def _parse_external_docs(self, html: str, limit: Optional[int] = 5) -> List[str]:
-        """
-        Parse external docs (help.puppet.com) HTML for release notes.
-        
-        TODO: Extract bullet points from help.puppet.com layout.
-        Returns first 5 bullets as list of strings.
-        """
-        soup = BeautifulSoup(html, 'html.parser')
-        
-        bullets: List[str] = []
-
-        # Prefer semantic content containers if present.
-        content_root = (
-            soup.find('main')
-            or soup.find('article')
-            or soup.find('div', attrs={'role': 'main'})
-            or soup
-        )
-
-        for li in content_root.find_all('li'):
-            text = self._clean_text(li.get_text(' ', strip=True))
-            if text:
-                bullets.append(text)
-
-        return self._dedupe_and_limit(bullets, limit=limit)
-
-    def _parse_madcap_flare(
-        self,
-        html: str,
-        anchor: str = '',
-        version: str = '',
-        module_name: str = '',
-        limit: Optional[int] = 5,
-    ) -> List[str]:
-        """
-        Parse MadCap Flare HTML (help.puppet.com) for release notes.
-        
-        MadCap Flare pages have:
-        - Navigation TOC with version links
-        - Main content in div[data-mc-content-body="True"]
-        - Real content as <li><p> or <li> with descriptions
-        
-        Strategy:
-        1. Find main content container
-        2. Extract <li> elements with actual content (have <p> tags or substantial text)
-        3. Filter out pure navigation items (version selectors, breadcrumbs)
-        4. Return up to 5 items
-        """
-        soup = BeautifulSoup(html, 'html.parser')
-        bullets: List[str] = []
-        
-        # Try to find main content container specific to MadCap Flare
-        content_container = soup.find('div', attrs={'data-mc-content-body': 'True'})
-        if not content_container:
-            # Fallback to common content containers
-            content_container = (
-                soup.find('main')
-                or soup.find('article')
-                or soup.find('div', attrs={'role': 'main'})
-                or soup
-            )
-        
-        search_root = self._find_anchor_section_root(content_container, anchor)
-        if not anchor:
-            search_root = self._find_version_section_root(search_root, version, module_name)
-
-        # Find actual content lists (skip TOC-style lists with just links)
-        for li in search_root.find_all('li'):
-            text = self._clean_madcap_text(li)
-            if text and self._is_content_item(text):
-                bullets.append(text)
-        
-        return self._dedupe_and_limit(bullets, limit=limit)
-
-    def _find_version_section_root(self, content_container, version: str, module_name: str = ''):
-        """Scope parsing to the section matching the target version when possible."""
-        if not version:
-            return content_container
-
-        version_pattern = re.compile(rf'\b{re.escape(version)}\b')
-        heading_tags = ['h1', 'h2', 'h3', 'h4']
-        version_heading = None
-
-        for heading in content_container.find_all(heading_tags):
-            heading_text = self._clean_text(heading.get_text(' ', strip=True))
-            if version_pattern.search(heading_text):
-                version_heading = heading
-                break
-
-        if not version_heading:
-            return content_container
-
-        section_nodes = [version_heading]
-        node = version_heading.find_next_sibling()
-        while node is not None:
-            if getattr(node, 'name', None) == version_heading.name:
-                node_text = self._clean_text(node.get_text(' ', strip=True))
-                if re.search(r'\b\d+\.\d+\.\d+\b', node_text):
-                    break
-
-            section_nodes.append(node)
-            node = node.find_next_sibling()
-
-        scoped_soup = BeautifulSoup('', 'html.parser')
-        wrapper = scoped_soup.new_tag('div')
-        for section_node in section_nodes:
-            wrapper.append(section_node)
-        scoped_soup.append(wrapper)
-        return scoped_soup
-
-    def _find_anchor_section_root(self, content_container, anchor: str):
-        """Return a scoped root for an anchor section when available."""
-        if not anchor:
-            return content_container
-
-        anchor_target = (
-            content_container.find(attrs={'id': anchor})
-            or content_container.find('a', attrs={'name': anchor})
-        )
-        if not anchor_target:
-            return content_container
-
-        section_nodes = []
-        heading_tags = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}
-
-        node = anchor_target
-        while node is not None:
-            section_nodes.append(node)
-            node = node.find_next_sibling()
-            if node is not None and getattr(node, 'name', None) in heading_tags:
-                break
-
-        if len(section_nodes) <= 1:
-            parent_block = anchor_target.find_parent(['section', 'article', 'div'])
-            return parent_block or content_container
-
-        scoped_soup = BeautifulSoup('', 'html.parser')
-        wrapper = scoped_soup.new_tag('div')
-        for section_node in section_nodes:
-            wrapper.append(section_node)
-        scoped_soup.append(wrapper)
-        return scoped_soup
-
-    def _clean_madcap_text(self, li_element) -> str:
-        """
-        Extract and clean text from a MadCap Flare <li> element.
-
-        Handles <li><p>text</p></li>, <li>text</li>, nested markup, etc.
-        Preserves <b> tags as **markdown bold** so titles stay readable.
-        """
-        # Try to get text from nested <p> first (most common in MadCap)
-        p_tag = li_element.find('p')
-        el = p_tag if p_tag else li_element
-
-        parts = []
-        for child in el.children:
-            if hasattr(child, 'name'):
-                if child.name == 'b':
-                    inner = child.get_text(' ', strip=True)
-                    if inner:
-                        parts.append(f'**{inner}**')
-                else:
-                    inner = child.get_text(' ', strip=True)
-                    if inner:
-                        parts.append(inner)
-            else:
-                # NavigableString
-                raw = str(child)
-                stripped = raw.strip()
-                if stripped:
-                    parts.append(stripped)
-
-        text = ' '.join(parts)
-        # Remove bold markdown wrapping lone punctuation (MadCap artifact: <b>.</b>)
-        text = re.sub(r'\*\*([.,:;!?])\*\*', r'\1', text)
-        # Remove space before sentence-ending punctuation that was previously a separate element
-        text = re.sub(r'\s+([.,:;!?])', r'\1', text)
-        # Clean up whitespace
-        text = re.sub(r'\s+', ' ', text or '').strip()
-
-        return text
-    
-    def _is_content_item(self, text: str) -> bool:
-        """
-        Determine if text is actual release note content vs navigation.
-        
-        Filters out:
-        - Concatenated versions: "Version 3.7.1 Version 3.7.0..."
-        - Single version numbers
-        - Pure product/module names
-        - Navigation headers
-        - Release notes TOC pages (product name repeated with versions)
-        - Very short items
-        """
-        if len(text) < 10:
-            return False
-        
-        # Concatenated versions anywhere in text: "Version X.Y.Z"
-        if re.search(r'Version\s+\d+\.\d+\.\d+', text):
-            # But only if it's mostly versions (allow some description before)
-            version_count = len(re.findall(r'Version\s+\d+\.\d+\.\d+', text))
-            if version_count > 1 or (version_count == 1 and text.strip().startswith('Version')):
-                return False
-        
-        # Single version number
-        if re.match(r'^(?:Version\s+)?\d+\.\d+(?:\.\d+)?$', text):
-            return False
-        
-        # Pure product/module names (common navigation items)
-        nav_items = [
-            'Security Compliance Management',
-            'Continuous Delivery',
-            'release notes',
+        bullets = changelog_parse.bullets_from_lines(section_lines)
+        bullets = [
+            changelog_parse.enrich_bullet_attribution(b, self.session, self._pr_author_cache)
+            for b in bullets
         ]
-        for item in nav_items:
-            # Match if it's the item by itself or item followed by just a version
-            if re.match(rf'^{re.escape(item)}(?:\s+\d+\.\d+(?:\.\d+)?)?$', text):
-                return False
-        
-        # Patterns that are clearly navigation (all versions/product names)
-        if re.match(r'^(?:Security Compliance Management|Continuous Delivery)\s+\d+\.\d+', text):
-            return False
-        
-        # Release notes TOC: "ProductName release notes ProductName X.Y ProductName X.Y..."
-        # Check if it starts with product name + "release notes" then repeats product+version
-        if re.search(r'(Security Compliance Management|Continuous Delivery)\s+release\s+notes', text):
-            # This is a TOC/nav page
-            if re.search(r'(Security Compliance Management|Continuous Delivery)\s+\d+\.\d+', text):
-                return False
-        
-        return True
+        return changelog_parse.dedupe_and_limit(bullets, limit=5)
 
-    # Matches a PR reference such as "[#25](https://github.com/org/repo/pull/25)",
-    # optionally wrapped in parentheses ("([#25](...))") as older changelogs do.
-    _PR_LINK_RE = re.compile(
-        r'(?P<lp>\(?)\[#(?P<num>\d+)\]\((?P<url>https://github\.com/[^/]+/[^/]+/pull/\d+)\)(?P<rp>\)?)'
-    )
-    # Matches an author profile credit such as "([smortex](https://github.com/smortex))".
-    # The profile URL has no further path segment, which distinguishes it from a PR link.
-    _AUTHOR_CREDIT_RE = re.compile(r'\(\[[^\]]+\]\(https://github\.com/[^/)]+\)\)')
-
-    def _bullets_from_lines(self, section_lines: List[str]) -> List[str]:
-        """Turn markdown changelog lines into bullet strings.
-
-        A list item (``- ``/``* ``) may wrap onto indented continuation lines —
-        older puppetlabs changelogs put the PR reference on the line *after* the
-        title, e.g.::
-
-            * **Allow ruby_task_helper 1.x**
-              ([#25](https://github.com/puppetlabs/puppetlabs-aws_inventory/pull/25))
-
-        Continuation lines are merged into the current bullet until a blank line,
-        a heading, or the next list item ends it. This keeps the PR reference that
-        the previous line-by-line parser silently dropped.
-        """
-        bullets: List[str] = []
-        current: Optional[List[str]] = None
-
-        for line in section_lines:
-            stripped = line.strip()
-            if stripped.startswith('- ') or stripped.startswith('* '):
-                self._flush_bullet(bullets, current)
-                current = [re.sub(r'^[-*]\s+', '', stripped)]
-            elif not stripped or stripped.startswith('#'):
-                # Blank line or heading terminates the current bullet.
-                self._flush_bullet(bullets, current)
-                current = None
-            elif current is not None:
-                # Indented/continuation text belonging to the current bullet.
-                current.append(stripped)
-
-        self._flush_bullet(bullets, current)
-        return bullets
-
-    def _flush_bullet(self, bullets: List[str], parts: Optional[List[str]]) -> None:
-        """Finalize an accumulated bullet: join, clean, enrich attribution, append."""
-        if not parts:
-            return
-        cleaned = self._clean_text(' '.join(parts))
-        if cleaned:
-            bullets.append(self._enrich_bullet_attribution(cleaned))
-
-    def _enrich_bullet_attribution(self, bullet: str) -> str:
-        """Append community attribution to a bullet that references a PR but has none.
-
-        If the bullet already credits an author (newer changelog style), it is
-        returned unchanged. Otherwise the PR author is looked up via the public
-        GitHub API and rendered to match the existing style:
-        ``... [#N](url) ([login](https://github.com/login))``.
-        """
-        if self._AUTHOR_CREDIT_RE.search(bullet):
-            return bullet
-
-        match = self._PR_LINK_RE.search(bullet)
-        if not match:
-            return bullet
-
-        author = self._lookup_pr_author(match.group('url'))
-        if not author:
-            return bullet
-
-        pr_link = f"[#{match.group('num')}]({match.group('url')})"
-        credit = f"([{author}](https://github.com/{author}))"
-        # Replace the matched PR reference (dropping any wrapping parens) with the
-        # normalized "PR link + author credit" form.
-        return bullet[:match.start()] + f"{pr_link} {credit}" + bullet[match.end():]
-
-    def _lookup_pr_author(self, pr_url: str) -> Optional[str]:
-        """Look up a PR author's GitHub login via the public API (no token needed).
-
-        Results (including failures) are cached per URL. Network errors and rate
-        limiting are non-fatal: attribution is simply skipped for that bullet.
-        """
-        if pr_url in self._pr_author_cache:
-            return self._pr_author_cache[pr_url]
-
-        match = re.match(r'https://github\.com/([^/]+)/([^/]+)/pull/(\d+)', pr_url)
-        if not match:
-            self._pr_author_cache[pr_url] = None
-            return None
-
-        owner, repo, number = match.groups()
-        api_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{number}"
-        author: Optional[str] = None
-        try:
-            response = self.session.get(
-                api_url,
-                timeout=10,
-                headers={'Accept': 'application/vnd.github+json'},
-            )
-            if response.status_code == 200:
-                author = (response.json().get('user') or {}).get('login')
-            elif response.status_code in (403, 429):
-                print(
-                    f"WARNING: GitHub API rate limit hit looking up {api_url}; "
-                    "skipping author attribution for this PR",
-                    file=sys.stderr,
-                )
-            else:
-                print(
-                    f"WARNING: GitHub API returned {response.status_code} for {api_url}",
-                    file=sys.stderr,
-                )
-        except requests.RequestException as e:
-            print(f"WARNING: Failed to look up PR author {api_url}: {e}", file=sys.stderr)
-
-        self._pr_author_cache[pr_url] = author
-        return author
-
-    def _clean_text(self, text: str) -> str:
-        """Normalize extracted list item text."""
-        cleaned = re.sub(r'\s+', ' ', text or '').strip()
-        if len(cleaned) < 8:
-            return ''
-        if cleaned.lower().startswith('version '):
-            return ''
-        return cleaned
-
-    def _dedupe_and_limit(self, items: List[str], limit: Optional[int] = 5) -> List[str]:
-        """Deduplicate while preserving order, then limit list size."""
-        seen = set()
-        result: List[str] = []
-        for item in items:
-            key = item.lower()
-            if key in seen:
-                continue
-            seen.add(key)
-            result.append(item)
-            if limit is not None and len(result) >= limit:
-                break
-        return result
-    
     def save_html_snapshot(self, module_name: str, version: str, html_content: str, snapshot_dir: Path) -> Path:
         """Save raw HTML snapshot for audit trail."""
         snapshot_dir.mkdir(parents=True, exist_ok=True)

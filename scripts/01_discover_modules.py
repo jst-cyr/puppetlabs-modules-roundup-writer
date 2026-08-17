@@ -18,7 +18,6 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
-from urllib.parse import urljoin
 import yaml
 
 try:
@@ -27,6 +26,8 @@ try:
 except ImportError:
     print("ERROR: requests and beautifulsoup4 required. Install with: pip install -r requirements.txt", file=sys.stderr)
     sys.exit(1)
+
+from lib import http_common, release_sources
 
 
 class ModuleDiscovery:
@@ -39,6 +40,7 @@ class ModuleDiscovery:
         """Initialize discovery with release notes source config."""
         self.config_path = config_path
         self.release_notes_sources = self._load_config()
+        self.session = http_common.make_session()
         
     def _load_config(self) -> Dict:
         """Load release_notes_sources.yaml config."""
@@ -61,19 +63,7 @@ class ModuleDiscovery:
     
     def get_release_notes_source(self, module_name: str) -> Dict:
         """Determine release notes source for a module."""
-        manual_review = set(self.release_notes_sources.get('manual_review', []))
-        external = self.release_notes_sources.get('external_docs', {})
-
-        if module_name in manual_review:
-            return {'source': 'manual_review'}
-
-        if module_name in external:
-            return {
-                'source': 'external_docs',
-                'config': external[module_name]
-            }
-
-        return {'source': self.release_notes_sources.get('default_source', 'forge_changelog')}
+        return release_sources.get_release_notes_source(module_name, self.release_notes_sources)
     
     def discover_from_html(self, html_content: str) -> List[Dict]:
         """
@@ -198,11 +188,7 @@ class ModuleDiscovery:
         print(f"Fetching Forge listing from: {self.FORGE_LISTING_URL}", file=sys.stderr)
         
         try:
-            response = requests.get(
-                self.FORGE_LISTING_URL,
-                timeout=10,
-                headers={'User-Agent': 'puppetlabs-roundup-bot/1.0'}
-            )
+            response = self.session.get(self.FORGE_LISTING_URL, timeout=10)
             response.raise_for_status()
         except requests.RequestException as e:
             print(f"ERROR: Failed to fetch Forge listing: {e}", file=sys.stderr)
@@ -281,11 +267,7 @@ class ModuleDiscovery:
         """Fetch a module's full release history and return its latest release in the target month, if any."""
         releases_url = f"https://forge.puppet.com/modules/puppetlabs/{module_slug}/releases"
         try:
-            response = requests.get(
-                releases_url,
-                timeout=10,
-                headers={'User-Agent': 'puppetlabs-roundup-bot/1.0'}
-            )
+            response = self.session.get(releases_url, timeout=10)
             response.raise_for_status()
         except requests.RequestException as e:
             print(f"WARNING: Failed to fetch release history for {module_slug}: {e}", file=sys.stderr)
@@ -371,7 +353,7 @@ class ModuleDiscovery:
             if assigned_source == 'external_docs':
                 # Construct release notes URL from config
                 config = source_info.get('config', {})
-                module['release_notes_url'] = self._build_external_docs_url(
+                module['release_notes_url'] = release_sources.build_external_docs_url(
                     name, module.get('latest_version'), config
                 )
             elif assigned_source == 'forge_changelog':
@@ -380,39 +362,8 @@ class ModuleDiscovery:
                 module['release_notes_url'] = None
 
         discovered.setdefault('metadata', {})['source_summary'] = source_counts
-        
-        return discovered
-    
-    def _build_external_docs_url(self, module_name: str, version: str, config: Dict) -> str:
-        """Construct external docs URL using config pattern."""
-        if not version:
-            return ''
 
-        url_pattern = config.get('url_pattern', '')
-        base_url = config.get('base_url', '')
-        
-        # Replace version placeholder: {version_underscore}
-        # e.g., "2.6.0" -> "260"
-        version_underscore = version.replace('.', '')
-        url = url_pattern.replace('{version_underscore}', version_underscore)
-        
-        # Check for version_transform (e.g., prepend 'v')
-        if 'version_transform' in config:
-            transform = config['version_transform']
-            url = url_pattern.replace('{version_underscore}', transform + version_underscore)
-        
-        full_url = urljoin(base_url, url)
-        
-        # Check for version_anchor flag to append anchor to URL
-        # Supports optional version_anchor_format string with {version_nodots} placeholder.
-        # e.g., cd4peadm 5.15.0 -> #Version5150
-        # e.g., comply 3.7.1 -> #SecurityComplianceManagement371
-        if config.get('version_anchor', False):
-            anchor_format = config.get('version_anchor_format', 'Version{version_nodots}')
-            version_anchor = anchor_format.replace('{version_nodots}', version_underscore)
-            full_url = f"{full_url}#{version_anchor}"
-        
-        return full_url
+        return discovered
 
 
 def main():

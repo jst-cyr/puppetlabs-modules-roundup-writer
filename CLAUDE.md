@@ -12,6 +12,7 @@ help text.
 |---------|---------|
 | `/roundup [Month] [Year]` | Run the whole pipeline for a target month (defaults to last month) |
 | `/roundup-verify [post path]` | Audit a finished post against the `AGENTS.md` checklist and count contributions |
+| `/module-releases-report [start] [end]` | Standalone CSV report of every module release in a date range, with per-release change/contribution counts (defaults to year-to-date) |
 
 Stages at a glance, for a target month/year:
 
@@ -33,16 +34,24 @@ exit code.
 Two steps need human sign-off: the curator review of the highlights YAML before Stage 4, and
 the polish pass on the generated post before publishing.
 
+`scripts/report_module_releases.py` is a **separate, standalone tool** — not a pipeline stage.
+It reuses the same parsing/classification engine (`scripts/lib/`) but talks to Forge's
+`v3/modules` JSON API directly instead of scraping HTML, and produces a CSV rather than a post.
+See the `module-releases-report` skill and [MODULE_RELEASES_REPORT_SPEC.md](MODULE_RELEASES_REPORT_SPEC.md).
+
 ## Key Files
 
 | File | Purpose |
 |------|---------|
 | `.claude/skills/monthly-roundup/` | Pipeline workflow, YAML spec, polish and validation guidance |
+| `.claude/skills/module-releases-report/` | Standalone releases-report workflow |
 | `AGENTS.md` | Generation rules and validation checklist for any LLM |
 | `MONTHLY_ROUNDUP_TEMPLATE.md` | Post template with `{{PLACEHOLDER}}` tokens |
+| `MODULE_RELEASES_REPORT_SPEC.md` | Design spec for the module-releases-report tool |
+| `scripts/lib/` | Shared parsing/classification engine used by both the pipeline stages and the report |
 | `config/release_notes_sources.yaml` | Overrides default Forge source for specific modules |
 | `config/internal_contributors.yaml` | Hand-maintained internal vs. community handle map |
-| `data/SCHEMA.md` | Schema for all intermediate JSON/YAML files |
+| `data/SCHEMA.md` | Schema for all intermediate JSON/YAML files and the releases-report CSV |
 | `scripts/README.md` | Detailed per-stage script documentation |
 | `posts/` | Final output — tracked in git |
 

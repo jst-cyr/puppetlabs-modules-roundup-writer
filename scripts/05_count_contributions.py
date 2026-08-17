@@ -18,7 +18,6 @@ Output:
 """
 
 import argparse
-import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -29,17 +28,9 @@ except ImportError:
     print("ERROR: PyYAML required. Install with: pip install pyyaml", file=sys.stderr)
     sys.exit(1)
 
-ATTRIBUTION_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]\(https://github\.com/([A-Za-z0-9_-]+)\)")
+from lib.contributor_classification import ATTRIBUTION_RE, classify_handle, load_classification
 
 DEFAULT_CONFIG = Path(__file__).resolve().parent.parent / "config" / "internal_contributors.yaml"
-
-
-def load_classification(config_path: Path):
-    with open(config_path, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
-    internal = {u.lower() for u in (data.get("internal") or [])}
-    community = {u.lower() for u in (data.get("community") or [])}
-    return internal, community
 
 
 def count_contributions(post_path: Path):
@@ -79,11 +70,11 @@ def main():
     internal_rows, community_rows, unknown_rows = [], [], []
 
     for user, n in counts.items():
-        key = user.lower()
-        if key in internal_set:
+        classification = classify_handle(user, internal_set, community_set)
+        if classification == "internal":
             internal_total += n
             internal_rows.append((user, n))
-        elif key in community_set:
+        elif classification == "community":
             community_total += n
             community_rows.append((user, n))
         else:
