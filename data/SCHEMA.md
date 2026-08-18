@@ -225,16 +225,18 @@ above. See [MODULE_RELEASES_REPORT_SPEC.md](../MODULE_RELEASES_REPORT_SPEC.md) f
 design.
 
 One row per release (not per module — a module with 3 releases in the date range gets 3 rows),
-sorted by `release_date` ascending, then `module_name`, then `version` descending:
+sorted by `publisher`, then `release_date` ascending, then `module_name`, then `version`
+descending:
 
 | Column | Type | Meaning |
 |---|---|---|
+| `publisher` | string | Raw Forge owner slug, e.g. `puppetlabs`, `puppet` (Vox Pupuli), or an individual maintainer's own username. Only populated with a value other than `puppetlabs` when run with `--all-publishers`. |
 | `module_name` | string | e.g. `stdlib` |
 | `version` | string | e.g. `10.0.2` |
 | `release_date` | `YYYY-MM-DD` | **UTC** date of the release, matching the convention already used elsewhere in this pipeline (and what's published in `posts/`) |
 | `num_changes` | int or blank | top-level changelog bullets found for this version |
-| `num_community_contributions` | int or blank | subset of those bullets credited to a handle listed under `community` in `config/internal_contributors.yaml` |
-| `num_unknown_contributions` | int or blank | subset credited to a handle in **neither** list — a to-do counter meaning `config/internal_contributors.yaml` needs updating, not a contribution type |
+| `num_community_contributions` | int or blank | subset of those bullets credited to a handle listed under `community` in `config/internal_contributors.yaml`. Only ever computed for `puppetlabs` rows — see below. |
+| `num_unknown_contributions` | int or blank | subset credited to a handle in **neither** list — a to-do counter meaning `config/internal_contributors.yaml` needs updating, not a contribution type. Only ever computed for `puppetlabs` rows — see below. |
 
 **Blank vs. `0` is meaningful, not incidental:**
 
@@ -242,7 +244,12 @@ sorted by `release_date` ascending, then `module_name`, then `version` descendin
   release's version at all (`num_changes` only), or this module's release notes carry no
   GitHub attribution structure to count (`num_community_contributions` /
   `num_unknown_contributions`, for modules whose release notes are prose docs on
-  help.puppet.com rather than a GitHub-hosted changelog).
+  help.puppet.com rather than a GitHub-hosted changelog) — **or**, in `--all-publishers` mode,
+  the release's `publisher` simply isn't `puppetlabs`. The two contribution columns are never
+  computed for other publishers: `config/internal_contributors.yaml` is curated against
+  Puppet/Perforce staff and doesn't generalize to other publishers' contributors, and resolving
+  attribution for the whole Forge catalog's changelog bullets would need far more live GitHub
+  lookups than the unauthenticated 60/hour limit allows.
 - **`0`** = knowable and genuinely zero — a changelog section was found and parsed
   successfully; it simply had no bullets, or no community/unknown-credited bullets.
 
@@ -252,3 +259,9 @@ contribution column. The remainder after subtracting community + unknown from `n
 internal-authored changes plus unattributed ones.
 
 Deleted/withdrawn releases (Forge's `deleted_at` set) are excluded entirely, never rowed.
+
+**`--all-publishers`** drops the `owner=puppetlabs` filter on the Forge API query and pages the
+entire catalog (~1,500 modules as of 2026-08) instead of just the ~108 puppetlabs modules. Use
+it to compare puppetlabs against Vox Pupuli (`puppet`) or the rest of the Forge; the run
+summary buckets rows into `puppetlabs` / `puppet (Vox Pupuli)` / `other` for a quick read, but
+the CSV itself always carries the raw per-row `publisher` slug.

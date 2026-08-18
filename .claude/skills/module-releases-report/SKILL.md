@@ -1,6 +1,6 @@
 ---
 name: module-releases-report
-description: Generate a CSV report of every puppetlabs module released on the Forge between a start and end date, one row per release, with per-release change and contribution counts. Use when the user asks for a releases report, a CSV of module releases, or "how many modules have been released" over some period.
+description: Generate a CSV report of every puppetlabs module released on the Forge between a start and end date, one row per release, with per-release change and contribution counts. Use when the user asks for a releases report, a CSV of module releases, "how many modules have been released" over some period, or a comparison against other Forge publishers (e.g. Vox Pupuli).
 ---
 
 # Module Releases Report
@@ -8,7 +8,12 @@ description: Generate a CSV report of every puppetlabs module released on the Fo
 A standalone report — not a stage of the `monthly-roundup` pipeline. It reuses that pipeline's
 parsing/classification logic (via `scripts/lib/`) but talks to Forge's `v3/modules` JSON API
 directly, since that API returns every module's full release history (and, for Forge-hosted
-changelogs, the full changelog markdown) inline in ~2 requests total.
+changelogs, the full changelog markdown) inline in ~2 requests total (puppetlabs-only) or ~16
+requests total (`--all-publishers`, the whole Forge catalog).
+
+By default this reports puppetlabs modules only. Pass `--all-publishers` when the user wants to
+compare against other publishers (e.g. Vox Pupuli, or "everyone else on the Forge") — see
+[All-publishers mode](#all-publishers-mode) below.
 
 ## Ground rules
 
@@ -43,6 +48,7 @@ Other useful flags:
 - `--output <path>` — write somewhere other than the default `data/module_releases_report_<start>_<end>.csv`
 - `--no-github-lookups` — skip live GitHub API calls entirely (fully offline; leaves some
   contribution counts unresolved rather than blank-vs-zero-classified)
+- `--all-publishers` — report every Forge publisher, not just puppetlabs (see below)
 
 ## Step 3 — Read the resolved range back
 
@@ -63,15 +69,39 @@ The script's final stdout block has everything needed to report back:
 - Any modules with blank counts (no automated bullet source) or blank `num_changes` (no
   matching changelog/docs section found) — call these out explicitly rather than letting them
   pass silently
+- In `--all-publishers` mode, the **By publisher** breakdown (see above)
+
+## All-publishers mode
+
+Add `--all-publishers` to report releases across the entire Forge catalog (~1,500 modules,
+~90+ publishers), not just puppetlabs — this is what "compare against Vox Pupuli" or "compare
+against other publishers" means in practice. It adds a `publisher` column (see below) and
+`_all_publishers` to the default output filename. Costs one extra minute or so of network time
+(paging ~16 requests instead of ~2); attribution/rate-limit behavior is unchanged since
+contribution counts still only run for puppetlabs rows.
+
+The script's summary prints a **By publisher** breakdown (rows/modules/changes, and community
+contributions where applicable) already bucketed into `puppetlabs` / `puppet (Vox Pupuli)` /
+`other` — that bucketing is for the terminal summary only. Report that breakdown to the user
+directly rather than re-deriving it from the CSV yourself.
 
 ## What the columns mean
 
-One row per release. Blank and `0` are **not** the same thing in the count columns:
+One row per release. `publisher` is the **raw Forge owner slug** for that release (`puppetlabs`,
+`puppet` for Vox Pupuli, or an individual maintainer's own username) — not pre-bucketed, so it
+can be pivoted downstream however's useful. In puppetlabs-only mode (the default) every row is
+`puppetlabs`.
+
+Blank and `0` are **not** the same thing in the count columns:
 
 - **blank** = not knowable from the available source — no changelog section matched this
   version, or (for the two contribution columns) this module's release notes carry no GitHub
   attribution structure at all (e.g. `sce_linux`, `sce_windows`, `cd4peadm` — prose docs on
-  help.puppet.com with no PR credits to count).
+  help.puppet.com with no PR credits to count) — **or** (in `--all-publishers` mode) this row's
+  publisher simply isn't `puppetlabs`: `num_community_contributions`/`num_unknown_contributions`
+  are never computed for other publishers, since `config/internal_contributors.yaml` is curated
+  against Puppet/Perforce staff and doesn't generalize, and resolving attribution for the whole
+  catalog would need far more live GitHub lookups than the unauthenticated rate limit allows.
 - **`0`** = knowable and genuinely zero.
 
 `num_unknown_contributions` counts bullets credited to a GitHub handle that isn't yet

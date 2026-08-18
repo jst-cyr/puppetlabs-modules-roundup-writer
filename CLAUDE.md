@@ -12,7 +12,7 @@ help text.
 |---------|---------|
 | `/roundup [Month] [Year]` | Run the whole pipeline for a target month (defaults to last month) |
 | `/roundup-verify [post path]` | Audit a finished post against the `AGENTS.md` checklist and count contributions |
-| `/module-releases-report [start] [end]` | Standalone CSV report of every module release in a date range, with per-release change/contribution counts (defaults to year-to-date) |
+| `/module-releases-report [start] [end] [--all-publishers]` | Standalone CSV report of every module release in a date range, with per-release change/contribution counts (defaults to year-to-date). `--all-publishers` extends it to every Forge publisher, for comparing against Vox Pupuli / others |
 
 Stages at a glance, for a target month/year:
 

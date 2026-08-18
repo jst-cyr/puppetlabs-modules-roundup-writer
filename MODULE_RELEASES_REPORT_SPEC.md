@@ -373,6 +373,36 @@ The refactor touches three working scripts with no test suite, so:
 `num_changes`. Flagged in the Goal section above; say the word if you want unattributed folded
 in or split into its own column.
 
+## Extension: `--all-publishers` (implemented 2026-08)
+
+Management asked to compare puppetlabs against other Forge publishers, specifically Vox Pupuli
+(Forge owner slug `puppet`, confirmed live via `v3/users/puppet`) and a rollup of everyone else.
+
+**Design decisions:**
+
+- The Forge API query drops `owner=puppetlabs` entirely rather than querying per-publisher; the
+  full catalog is ~1,501 modules (vs. 108 for puppetlabs alone) across ~16 paged requests and
+  took ~18s end to end in testing — cheap enough not to need a narrower default.
+- The CSV's new `publisher` column holds the **raw Forge owner slug** per row (`puppetlabs`,
+  `puppet`, or an individual maintainer's username) rather than a pre-bucketed value — more
+  flexible for downstream pivoting than baking in the puppetlabs/puppet/other split. The script's
+  own run summary does bucket into those three groups for a quick terminal read.
+- `num_community_contributions`/`num_unknown_contributions` are computed **only** for
+  `publisher == 'puppetlabs'` rows, always blank otherwise. Two reasons, both structural rather
+  than effort-driven: `config/internal_contributors.yaml` is curated against Puppet/Perforce
+  staff and has no meaning for a Vox Pupuli or independent maintainer's contributors; and
+  resolving attribution for the whole catalog's changelog bullets would need far more live
+  GitHub lookups than the unauthenticated 60/hour limit tolerates (measured: still only 5 live
+  lookups for a full YTD `--all-publishers` run, because that's exactly the count that already
+  applied to the puppetlabs-only report — attribution resolution never runs for the ~1,393
+  non-puppetlabs modules in scope).
+- Default off, opt-in via `--all-publishers`, to leave the existing puppetlabs-only report's
+  behavior and cost profile unchanged when not requested.
+- `manual_review_modules` / blank-`num_changes` name lists in the run summary are capped at 25
+  names (falling back to a count) since the full catalog has hundreds of modules using changelog
+  formats the parser doesn't recognize — dumping them all into a terminal isn't useful; the CSV
+  has the full detail.
+
 ## Not in scope
 
 - No behavior change to `01`/`02`/`05` — the refactor moves logic only, verified by diff.
