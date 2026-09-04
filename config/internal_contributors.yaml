@@ -38,6 +38,9 @@ internal:
   - joshcooper         # Puppet/Perforce (confirmed)
   - mhashizume         # Puppet/Perforce (confirmed)
   - span786            # Puppet/Perforce (confirmed)
+  - beechtom           # Puppet/Perforce (confirmed)
+  - mehul-jain1        # Puppet/Perforce (confirmed)
+  - michaelr3207       # Puppet/Perforce (confirmed)
 
 # Contributors confirmed NOT to be Puppet/Perforce employees. Listing them
 # explicitly (instead of just leaving them unclassified) lets the script tell
@@ -78,3 +81,4 @@ community:
   - techsk8
   - traylenator
   - zen-fu
+  - xbulat
