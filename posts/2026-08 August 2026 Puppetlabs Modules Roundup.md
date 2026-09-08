@@ -2,7 +2,7 @@
 
 **Tags:** #puppet
 
-August 2026 brought 24 releases across 22 Puppetlabs modules (puppet_metrics_collector and cd4peadm each shipped twice), headlined by a broad Puppet 9 compatibility rollout. Continuous Delivery for PE also shipped a required upgrade, Security Compliance Management 3.9.0 closed out 117 CVEs, and several community contributions were rolled into modules as well. This roundup pulls the most important changes into one place.
+August 2026 brought 24 releases across 22 Puppetlabs modules (puppet_metrics_collector and cd4peadm each shipped twice), headlined by a broad Puppet Core 9 compatibility rollout. Continuous Delivery for PE also shipped a required upgrade, Security Compliance Management 3.9.0 closed out 117 CVEs, and several community contributions were rolled into modules as well. This roundup pulls the most important changes into one place.
 
 ## Highlighted Updates
 
