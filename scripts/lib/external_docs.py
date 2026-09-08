@@ -6,11 +6,15 @@ report_module_releases.py, which fetches the same pages independently.
 """
 
 import re
-from typing import List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
 
 from .changelog_parse import clean_text, dedupe_and_limit
+
+_VERSION_HEADING_RE = re.compile(r'\b(\d+\.\d+\.\d+)\b')
+_RELEASED_DATE_RE = re.compile(r'Released\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})')
 
 
 def parse_external_docs(html: str, limit: Optional[int] = 5) -> List[str]:
@@ -69,6 +73,83 @@ def parse_madcap_flare(
             bullets.append(text)
 
     return dedupe_and_limit(bullets, limit=limit)
+
+
+def extract_madcap_release_sections(html: str, limit: Optional[int] = None) -> List[Dict]:
+    """Parse every version section on a MadCap Flare release-notes page.
+
+    help.puppet.com's cd4peadm/comply/complyadm pages keep the full release
+    history on one page, each version as its own heading (e.g. "Version
+    5.17.0" or "Security Compliance Management 3.9.0") immediately followed
+    by a "Released D Month YYYY." paragraph. `parse_madcap_flare` only scopes
+    to one target version/anchor; this mirrors
+    `changelog_parse.extract_release_sections()` for the Forge-changelog path
+    instead, returning every section so a caller can filter by date range and
+    catch a module that shipped more than once in the target month -- which
+    `parse_madcap_flare` alone would silently miss (it only ever looks at the
+    "current" version's anchor).
+
+    Traversal is read-only (no nodes are moved into a scratch soup, unlike
+    `_find_anchor_section_root`/`_find_version_section_root`), since it needs
+    to inspect every heading in the page rather than just one.
+    """
+    soup = BeautifulSoup(html, 'html.parser')
+    content_container = soup.find('div', attrs={'data-mc-content-body': 'True'}) or (
+        soup.find('main') or soup.find('article') or soup.find('div', attrs={'role': 'main'}) or soup
+    )
+
+    heading_tags = ['h1', 'h2', 'h3', 'h4']
+    version_headings = []
+    for heading in content_container.find_all(heading_tags):
+        # NOTE: deliberately not clean_text() here -- it blanks out any string
+        # starting with "version " (a rule meant to filter noisy bullet-list
+        # items), which would wipe every heading on this page ("Version
+        # 5.18.0", etc.) before the version regex ever sees it.
+        heading_text = re.sub(r'\s+', ' ', heading.get_text(' ', strip=True)).strip()
+        match = _VERSION_HEADING_RE.search(heading_text)
+        if match:
+            version_headings.append((heading, match.group(1)))
+
+    sections: List[Dict] = []
+    for heading, version in version_headings:
+        section_nodes = []
+        node = heading.find_next_sibling()
+        while node is not None:
+            if getattr(node, 'name', None) in heading_tags:
+                node_text = re.sub(r'\s+', ' ', node.get_text(' ', strip=True)).strip()
+                if _VERSION_HEADING_RE.search(node_text):
+                    break
+            section_nodes.append(node)
+            node = node.find_next_sibling()
+
+        release_date = ''
+        for section_node in section_nodes[:3]:
+            text = section_node.get_text(' ', strip=True) if hasattr(section_node, 'get_text') else ''
+            date_match = _RELEASED_DATE_RE.search(text)
+            if date_match:
+                try:
+                    release_date = datetime.strptime(date_match.group(1), '%d %B %Y').strftime('%Y-%m-%d')
+                except ValueError:
+                    pass
+                break
+
+        bullets = []
+        for section_node in section_nodes:
+            if not hasattr(section_node, 'find_all'):
+                continue
+            for li in section_node.find_all('li'):
+                text = _clean_madcap_text(li)
+                if text and _is_content_item(text):
+                    bullets.append(text)
+
+        sections.append({
+            'version': version,
+            'release_date': release_date,
+            'bullets': dedupe_and_limit(bullets, limit=limit),
+        })
+
+    sections.sort(key=lambda s: s.get('release_date') or '', reverse=True)
+    return sections
 
 
 def _find_version_section_root(content_container, version: str, module_name: str = ''):

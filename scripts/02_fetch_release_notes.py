@@ -213,53 +213,152 @@ class ReleaseNotesFetcher:
             return changelog
         return ''
 
-    def fetch_from_external_docs(self, module_name: str, version: str, docs_url: str, parser_type: Optional[str] = None) -> Optional[Dict]:
+    def fetch_from_external_docs(
+        self,
+        module_name: str,
+        version: str,
+        docs_url: str,
+        parser_type: Optional[str] = None,
+        target_month: Optional[int] = None,
+        target_year: Optional[int] = None,
+        fallback_release_date: str = '',
+    ) -> Optional[Dict]:
         """
         Fetch release notes from external docs (help.puppet.com).
-        
+
         Args:
             module_name: Name of the module
             version: Version number
             docs_url: URL to fetch from
             parser_type: Type of parser to use ('madcap_flare', 'help_puppet_html', etc.)
-        
+
         Returns:
             Dict with version, release_date, source, source_url, raw_html_path, parsed_bullets
             or None if fetch fails.
         """
         print(f"Fetching external docs for {module_name} v{version} from {docs_url}", file=sys.stderr)
         fetch_url, anchor = urldefrag(docs_url)
-        
+
         try:
             response = self.session.get(fetch_url, timeout=10)
             response.raise_for_status()
         except requests.RequestException as e:
             print(f"ERROR: Failed to fetch {fetch_url}: {e}", file=sys.stderr)
             return None
-        
+
         html_content = response.text
-        
+
         # Parse HTML to extract bullets based on parser type
         if parser_type == 'madcap_flare':
-            full_bullets = external_docs.parse_madcap_flare(
-                html_content,
+            monthly_rollup = self._parse_madcap_monthly_release_notes(
+                html=html_content,
                 anchor=anchor,
-                version=version,
+                latest_version=version,
                 module_name=module_name,
-                limit=None,
+                target_month=target_month,
+                target_year=target_year,
+                fallback_release_date=fallback_release_date,
             )
+            full_bullets = monthly_rollup['parsed_bullets_full']
+            releases_in_month = monthly_rollup['releases_in_month']
+            latest_monthly_version = monthly_rollup['latest_version']
+            latest_monthly_release_date = monthly_rollup['latest_release_date']
         else:
             full_bullets = external_docs.parse_external_docs(html_content, limit=None)
+            releases_in_month = [
+                {
+                    'version': version,
+                    'release_date': fallback_release_date,
+                    'parsed_bullets': full_bullets,
+                }
+            ] if full_bullets else []
+            latest_monthly_version = version
+            latest_monthly_release_date = fallback_release_date
 
         bullets = changelog_parse.dedupe_and_limit(full_bullets, limit=5)
-        
+
         return {
             'source': 'external_docs',
             'source_url': docs_url,
             'html_snapshot_path': None,
             'parsed_bullets': bullets if bullets else ['See release notes on help.puppet.com'],
             'parsed_bullets_full': full_bullets,
+            'releases_in_month': releases_in_month,
+            'latest_monthly_version': latest_monthly_version,
+            'latest_monthly_release_date': latest_monthly_release_date,
             'raw_html': html_content,
+        }
+
+    def _parse_madcap_monthly_release_notes(
+        self,
+        html: str,
+        anchor: str,
+        latest_version: str,
+        module_name: str,
+        target_month: Optional[int],
+        target_year: Optional[int],
+        fallback_release_date: str,
+    ) -> Dict:
+        """Roll up every MadCap version section that falls in the target month.
+
+        Mirrors `_parse_forge_monthly_changelog`: a module using a shared,
+        multi-version help.puppet.com page (cd4peadm, comply, complyadm) can
+        ship more than once in a month, and the single-anchor
+        `parse_madcap_flare` path only ever surfaces the "current" version --
+        silently dropping any earlier release from the same month even though
+        its section is sitting right there in the same fetched page.
+        """
+        all_sections = external_docs.extract_madcap_release_sections(html, limit=None)
+
+        if target_month and target_year:
+            start, end = _month_bounds(target_year, target_month)
+            monthly_sections = changelog_parse.filter_sections_by_range(all_sections, start, end)
+        else:
+            monthly_sections = []
+
+        if not monthly_sections:
+            # Fall back to the single-anchor path: no dated sections matched
+            # (non-MadCap-multi-version page, or dates didn't parse), so scope
+            # to the one version Stage 1 already told us is current.
+            bullets = external_docs.parse_madcap_flare(
+                html,
+                anchor=anchor,
+                version=latest_version,
+                module_name=module_name,
+                limit=None,
+            )
+            return {
+                'parsed_bullets_full': bullets,
+                'releases_in_month': [
+                    {
+                        'version': latest_version,
+                        'release_date': fallback_release_date,
+                        'parsed_bullets': bullets,
+                    }
+                ] if bullets else [],
+                'latest_version': latest_version,
+                'latest_release_date': fallback_release_date,
+            }
+
+        rolled_up_bullets: List[str] = []
+        releases_in_month: List[Dict] = []
+        for section in monthly_sections:
+            section_bullets = section.get('bullets', [])
+            releases_in_month.append(
+                {
+                    'version': section.get('version', ''),
+                    'release_date': section.get('release_date', ''),
+                    'parsed_bullets': section_bullets,
+                }
+            )
+            rolled_up_bullets.extend(section_bullets)
+
+        latest = monthly_sections[0]
+        return {
+            'parsed_bullets_full': changelog_parse.dedupe_and_limit(rolled_up_bullets, limit=None),
+            'releases_in_month': releases_in_month,
+            'latest_version': latest.get('version') or latest_version,
+            'latest_release_date': fallback_release_date or latest.get('release_date') or '',
         }
     
     def _parse_forge_changelog(self, html: str, version: str) -> List[str]:
@@ -453,7 +552,15 @@ def main():
             module_config = external_docs_config.get(module_name, {})
             if module_config:
                 parser_type = module_config.get('parser_type')
-            release_info = fetcher.fetch_from_external_docs(module_name, version, source_url, parser_type=parser_type)
+            release_info = fetcher.fetch_from_external_docs(
+                module_name,
+                version,
+                source_url,
+                parser_type=parser_type,
+                target_month=target_month_num,
+                target_year=target_year,
+                fallback_release_date=release_date,
+            )
         elif source == 'manual_review':
             release_info = {
                 'source': 'manual_review',
