@@ -2,37 +2,33 @@
 
 **Tags:** #puppet
 
-August 2026 brought 24 releases across 22 Puppetlabs modules (puppet_metrics_collector and cd4peadm each shipped twice), headlined by a broad Puppet 9 compatibility rollout: 14 modules picked up Puppet 9 support, and five of them (package, node_encrypt, service, reboot, tomcat) paired that with dropping Puppet 7 support in major version bumps as part of an ongoing Puppet Core modernization pass. Continuous Delivery for PE also shipped a required upgrade (cd4peadm 5.17.0) for anyone integrating with newer PE versions, Security Compliance Management 3.9.0 closed out 117 CVEs across its bundled third-party components, and security_policy added a new kerberos_policy type/provider. This roundup pulls the most important changes into one place.
+August 2026 brought 24 releases across 22 Puppetlabs modules (puppet_metrics_collector and cd4peadm each shipped twice), headlined by a broad Puppet 9 compatibility rollout. Continuous Delivery for PE also shipped a required upgrade, Security Compliance Management 3.9.0 closed out 117 CVEs, and several community contributions were rolled into modules as well. This roundup pulls the most important changes into one place.
 
 ## Highlighted Updates
 
-### Puppet 9 Support Rolls Out Across the Catalog
+### Puppet Core 9 Support Continues to be Added Across Modules
 
-Fourteen puppetlabs modules added Puppet 9 compatibility this month, continuing the org's ongoing Puppet 9 rollout. Five of them — package, node_encrypt, service, reboot, and tomcat — paired the Puppet 9 addition with dropping Puppet 7 support in major version bumps as part of a broader Puppet Core modernization pass; see below.
+Fourteen `puppetlabs` modules added Puppet Core 9 compatibility this month, continuing the ongoing Puppet 9 rollout. Five of them (`package`, `node_encrypt`, `service`, `reboot`, and `tomcat`) paired the Puppet Core 9 addition with dropping Puppet 7 support in major version bumps as part of a broader Puppet Core modernization pass; see below.
 
 - Affected modules: exec, package, node_encrypt, mount_iso, lvm, service, java, inifile, reboot, windows_eventlog, cd4pe, cd4pe_jobs, cd4peadm, tomcat.
 
 ### Puppet 7 Support Dropped
 
-Five modules dropped Puppet 7 support in major version bumps this month as part of the same Puppet Core modernization pass: package, node_encrypt, service, reboot, and tomcat. reboot also picked up CentOS 9 support in the same release.
+Five modules dropped Puppet 7 support in major version bumps this month as part of the same Puppet Core modernization pass: `package`, `node_encrypt`, `service`, `reboot`, and `tomcat`. `reboot` also picked up CentOS 9 support in the same release.
 
 - Affected modules: package, node_encrypt, service, reboot, tomcat.
 
 ### Continuous Delivery for PE: Required Upgrade for Newer PE Versions
 
-cd4peadm 5.17.0 is a required upgrade if you're integrating with PE 2023.8.11, 2025.12.0, or 2026.0.0+: those PE versions now require cert-based auth on puppetserver's `/status/v1/services` endpoint, and CD's older unauthenticated calls to it fail with a 403 until you upgrade.
+`cd4peadm` 5.17.0 is a required upgrade if you're integrating with PE 2023.8.11, 2025.12.0, or 2026.0.0+. Those PE versions now require cert-based auth on puppetserver's `/status/v1/services` endpoint, and CD's older unauthenticated calls to it fail with a 403 until you upgrade.
 
-- The same release also adds Puppet 9.0 support and closes a second batch of CVEs (bouncycastle, react-router, nanoid, and others).
+- The same release also adds Puppet 9 support and closes a second batch of CVEs (bouncycastle, react-router, nanoid, and others).
 
 ### Security Compliance Management Patches 117 CVEs
 
-Security Compliance Management 3.9.0, shipped as both comply and complyadm, updates roughly 20 bundled third-party components — curl/libcurl, OpenSSL, the Netty codec family, Jackson Databind, Keycloak services, and libxml2 among them — closing out 117 CVEs.
+Security Compliance Management 3.9.0, shipped as both `comply` and `complyadm`, updates roughly 20 bundled third-party components to address 117 CVEs. These included curl/libcurl, OpenSSL, the Netty codec family, Jackson Databind, Keycloak services, and libxml2. — .
 
 - Also restricts the Keycloak administration console and Admin REST API from public access by default, and adds support for pulling container images from a private or air-gapped registry instead of only the public default.
-
-### New kerberos_policy Type/Provider in security_policy
-
-security_policy 1.1.0's Epic F adds a `kerberos_policy` type/provider and a `new_guest_name` class parameter, expanding the module's native parity coverage ahead of SCE integration.
 
 ## What Updates Happened to Puppetlabs Modules in August 2026?
 
@@ -44,9 +40,9 @@ The following is an alphabetical listing of modules which received updates in Au
 
 📅 Latest release: 2026-08-13 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/cd4pe))
 
-Adds Puppet 9 to the version requirements and updates the module with PDK 3.8.0, along with allowing the stdlib dependency to move to 10.x.
+Adds Puppet version 9 to the version requirements and updates the module with PDK 3.8.0, along with allowing the stdlib dependency to move to 10.x.
 
-- Added Puppet 9 to the Puppet version requirements.
+- Added version 9 to the Puppet version range.
 - Updated module with PDK 3.8.0.
 - Expanded the puppetlabs-stdlib dependency to allow stdlib 10.x.
 - Removed unused/dead methods from cd4pe_client.rb.
@@ -57,7 +53,7 @@ Adds Puppet 9 to the version requirements and updates the module with PDK 3.8.0,
 
 📅 Latest release: 2026-08-12 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/cd4pe_jobs))
 
-Adds Puppet 9 support without dropping Puppet 7; the `puppet` requirement in `metadata.json` is now `>= 7.24 < 10.0.0`.
+Adds Puppet version 9 support without dropping Puppet 7.
 
 - Support for Puppet 9. The `puppet` requirement in `metadata.json` is now `>= 7.24 < 10.0.0`.
 
@@ -67,11 +63,11 @@ Adds Puppet 9 support without dropping Puppet 7; the `puppet` requirement in `me
 
 📅 Latest release: 2026-08-26 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/cd4peadm))
 
-Two releases this month for Continuous Delivery for PE: 5.17.0 is a **required upgrade** for anyone integrating with PE 2023.8.11, 2025.12.0, or 2026.0.0+ — those PE versions require cert-based auth on puppetserver's `/status/v1/services` endpoint, which CD previously called unauthenticated, and integration fails with a 403 until you upgrade. 5.17.0 also adds Puppet 9.0 support. 5.18.0 follows up with a smaller set of fixes: ssl_cert_chain and ssl_crl in common.yaml can now reference file paths instead of requiring inline PEM contents, and several UI rendering bugs are fixed. Combined, the two releases close 42 CVEs.
+Two releases this month for Continuous Delivery for PE: 5.17.0 is a **required upgrade** for anyone integrating with PE 2023.8.11, 2025.12.0, or 2026.0.0+ — those PE versions require cert-based auth on puppetserver's `/status/v1/services` endpoint, which CD previously called unauthenticated, and integration fails with a 403 until you upgrade. 5.17.0 also adds Puppet version 9 support. 5.18.0 follows up with a smaller set of fixes: ssl_cert_chain and ssl_crl in common.yaml can now reference file paths instead of requiring inline PEM contents, and several UI rendering bugs are fixed. Combined, the two releases close 42 CVEs.
 
 Includes monthly releases: 5.18.0 (2026-08-26), 5.17.0 (2026-08-18).
 
-- Added support for Puppet 9.0.
+- Added support for version 9 of Puppet.
 - Fixed an issue where lastLoginTime data might not be current in some situations. The lastLoginTime field of the user details response from GET /v1/users/{userID} is now correctly updated for LDAP and SAML logins, as well as the initial login after account creation.
 - Fixed an issue where some upgraded environments could show a blank Pipelines as Code view and a blank approval details page for module repo pipelines. These pages now render properly without recreating the pipeline.
 - 42 CVEs addressed.
@@ -124,7 +120,7 @@ Fixes a bug where `CronParam#numfix` used the `=~` operator on non-String values
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/exec))
 
-Adds Puppet 9 support.
+Adds support for Puppet Core 9.
 
 - (MODULES-11713) Add Puppet 9 support [#250](https://github.com/puppetlabs/puppetlabs-exec/pull/250) ([imaqsood](https://github.com/imaqsood))
 
@@ -134,7 +130,7 @@ Adds Puppet 9 support.
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/inifile))
 
-Adds Puppet 9 support, and fixes `array_matching` to return the first element when it isn't set to `:all`.
+Adds Puppet Core 9 support, and fixes `array_matching` to return the first element when it isn't set to `:all`.
 
 - (MODULES-11703) Add Puppet 9 support [#573](https://github.com/puppetlabs/puppetlabs-inifile/pull/573) ([imaqsood](https://github.com/imaqsood))
 - Return the first element if `array_matching` is not `:all` [#571](https://github.com/puppetlabs/puppetlabs-inifile/pull/571) ([bwitt](https://github.com/bwitt))
@@ -145,7 +141,7 @@ Adds Puppet 9 support, and fixes `array_matching` to return the first element wh
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/java))
 
-Adds Puppet 9 support and defaults RHEL 10 nodes to OpenJDK 21.
+Adds Puppet Core 9 support and defaults RHEL 10 nodes to OpenJDK 21.
 
 - (MODULES-11704) Add Puppet 9 support [#630](https://github.com/puppetlabs/puppetlabs-java/pull/630) ([imaqsood](https://github.com/imaqsood))
 - (MODULES-11917) Default RHEL 10 to OpenJDK 21 [#631](https://github.com/puppetlabs/puppetlabs-java/pull/631) ([imaqsood](https://github.com/imaqsood))
@@ -157,8 +153,6 @@ Adds Puppet 9 support and defaults RHEL 10 nodes to OpenJDK 21.
 📅 Latest release: 2026-08-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/kubernetes))
 
 Bumps several dependency constraints (augeasproviders_sysctl, augeas core, stdlib) and moves the module to Puppet Core 8, alongside a fix for `kubernetes_version` matching and a batch of CI/environment maintenance work.
-
-**Note:** unlike this month's other Puppet Core updates, this release references moving to "puppetcore 8" but ships as a patch release rather than a major version bump, and its changelog doesn't explicitly state that Puppet 7 support was dropped. Worth confirming with the maintainers before treating it the same as the five Puppet 7 removals above.
 
 - fix(MODULES-11856): Bump augeasproviders_sysctl to <5.0.0 and core to <6.0.0 [#722](https://github.com/puppetlabs/puppetlabs-kubernetes/pull/722) ([imaqsood](https://github.com/imaqsood))
 - (MODULES-11840) Allow puppetlabs/stdlib 10.x [#718](https://github.com/puppetlabs/puppetlabs-kubernetes/pull/718) ([imaqsood](https://github.com/imaqsood))
@@ -176,7 +170,7 @@ Bumps several dependency constraints (augeasproviders_sysctl, augeas core, stdli
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/lvm))
 
-Adds Puppet 9 support.
+Now supports Puppet Core 9.
 
 - (MODULES-11719) Add Puppet 9 support [#391](https://github.com/puppetlabs/puppetlabs-lvm/pull/391) ([imaqsood](https://github.com/imaqsood))
 
@@ -186,7 +180,7 @@ Adds Puppet 9 support.
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/mount_iso))
 
-Adds Puppet 9 support.
+Puppet Core 9 is now supported.
 
 - (MODULES-11723) Add Puppet 9 support [#61](https://github.com/puppetlabs/puppetlabs-mount_iso/pull/61) ([imaqsood](https://github.com/imaqsood))
 
@@ -196,7 +190,7 @@ Adds Puppet 9 support.
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/node_encrypt))
 
-Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, and adds Puppet 9 support in the same release.
+Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, and adds version 9 support in the same release.
 
 - (CAT-2382) Update for Puppet Core / Drop Support for Puppet 7 [#125](https://github.com/puppetlabs/puppetlabs-node_encrypt/pull/125) ([david22swan](https://github.com/david22swan))
 - (MODULES-11724) Add Puppet 9 support [#126](https://github.com/puppetlabs/puppetlabs-node_encrypt/pull/126) ([imaqsood](https://github.com/imaqsood))
@@ -207,7 +201,7 @@ Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, and adds 
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/package))
 
-Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, adds Puppet 9 support, and surfaces chocolatey bootstrap failures more clearly in Windows acceptance testing.
+Puppet 7 support gets dropped (**BREAKING**) as part of a Puppet Core update and also adds Puppet Core 9 support. Also, Chocolatey bootstrap failures are now surfaced more clearly in Windows acceptance testing.
 
 - (CAT-2384) Prepare module for Puppet Core / Drop Support for Puppet 7 [#346](https://github.com/puppetlabs/puppetlabs-package/pull/346) ([shubhamshinde360](https://github.com/shubhamshinde360))
 - (MODULES-11927) Surface chocolatey bootstrap failures in Windows acceptance [#354](https://github.com/puppetlabs/puppetlabs-package/pull/354) ([imaqsood](https://github.com/imaqsood))
@@ -234,7 +228,7 @@ Includes monthly releases: 8.2.3 (2026-08-14), 8.2.2 (2026-08-07).
 
 📅 Latest release: 2026-08-26 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/reboot))
 
-Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, adds Puppet 9 support, and adds CentOS 9 support.
+Drops Puppet 7 (**BREAKING**) amd adds support for Puppet Core 9 and CentOS 9.
 
 - (CAT-2388) Puppet Core update and Remove Puppet 7 support [#378](https://github.com/puppetlabs/puppetlabs-reboot/pull/378) ([LukasAud](https://github.com/LukasAud))
 - (MODULES-11707) Add Puppet 9 support [#381](https://github.com/puppetlabs/puppetlabs-reboot/pull/381) ([skyamgarp](https://github.com/skyamgarp))
@@ -246,7 +240,7 @@ Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, adds Pupp
 
 📅 Latest release: 2026-08-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/security_policy))
 
-Epic F adds a `kerberos_policy` type/provider and a `new_guest_name` class parameter, expanding the module's native parity coverage ahead of SCE integration; this release also wraps up post-release cleanup for Epics A/B/D/E and transfers Epic C to puppetlabs-sce_windows.
+A `kerberos_policy` type/provider and a `new_guest_name` class parameter are added, expanding the module's native parity coverage ahead of SCE integration. 
 
 - [MODULES-11883/MODULES-11884] Epic F: kerberos_policy type/provider (F.1) + new_guest_name parameter (F.2) [#45](https://github.com/puppetlabs/puppetlabs-security_policy/pull/45) ([mehul-jain1](https://github.com/mehul-jain1))
 - [MODULES-11884] Add new_guest_name class parameter (Epic F.2) [#44](https://github.com/puppetlabs/puppetlabs-security_policy/pull/44) ([mehul-jain1](https://github.com/mehul-jain1))
@@ -260,7 +254,7 @@ Epic F adds a `kerberos_policy` type/provider and a `new_guest_name` class param
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/service))
 
-Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, and adds Puppet 9 support.
+Drops support for Puppet version 7 (**BREAKING**) and adds version 9 support.
 
 - (CAT-2392) Puppet Core update / Drop support for puppet 7 [#263](https://github.com/puppetlabs/puppetlabs-service/pull/263) ([LukasAud](https://github.com/LukasAud))
 - (MODULES-11709) Add Puppet 9 support [#268](https://github.com/puppetlabs/puppetlabs-service/pull/268) ([imaqsood](https://github.com/imaqsood))
@@ -306,17 +300,17 @@ Drops Puppet 7 support (**BREAKING**) as part of a Puppet Core update, and allow
 
 📅 Latest release: 2026-08-31 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/windows_eventlog))
 
-Adds Puppet 9 support.
+Adds Puppet Core 9 support to the module.
 
 - (MODULES-11729) Add Puppet 9 support [#100](https://github.com/puppetlabs/puppetlabs-windows_eventlog/pull/100) ([imaqsood](https://github.com/imaqsood))
 
 ## Until Next Time!
 
-That wraps up the August 2026 roundup. If any of these modules intersect with your environment — especially the five Puppet 7 removals (package, node_encrypt, service, reboot, tomcat), cd4peadm's required upgrade for newer PE integrations, and the Security Compliance Management CVE batch — the linked Forge pages and release notes are worth a closer look before upgrading.
+That wraps up the August 2026 roundup. If any of these modules intersect with your environment,  especially the five modules that removed Puppet 7 support (`package`, `node_encrypt`, `service`, `reboot`, and `tomcat`), or some of the other breaking or required changes, the linked Forge pages and release notes are worth a closer look before upgrading.
 
 Feedback on the series is always useful, especially if there are module families or release-note patterns that deserve more attention in future editions.
 
-More updates coming next month when the September 2026 releases land.
+More updates coming next month when the September 2026 releases land, and you should expect to see continued Puppet Core 9 support rolling out across September!
 
 ## 🤖 AI Disclosure
 
