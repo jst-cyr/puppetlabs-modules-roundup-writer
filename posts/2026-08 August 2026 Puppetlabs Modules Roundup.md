@@ -2,7 +2,7 @@
 
 **Tags:** #puppet
 
-August 2026 brought 22 Puppetlabs module releases, headlined by a broad Puppet 9 compatibility rollout: 14 modules picked up Puppet 9 support, and five of them (package, node_encrypt, service, reboot, tomcat) paired that with dropping Puppet 7 support in major version bumps as part of an ongoing Puppet Core modernization pass. Continuous Delivery for PE also shipped a required upgrade (cd4peadm 5.17.0) for anyone integrating with newer PE versions, Security Compliance Management 3.9.0 closed out 117 CVEs across its bundled third-party components, and security_policy added a new kerberos_policy type/provider. This roundup pulls the most important changes into one place.
+August 2026 brought 24 releases across 22 Puppetlabs modules (puppet_metrics_collector and cd4peadm each shipped twice), headlined by a broad Puppet 9 compatibility rollout: 14 modules picked up Puppet 9 support, and five of them (package, node_encrypt, service, reboot, tomcat) paired that with dropping Puppet 7 support in major version bumps as part of an ongoing Puppet Core modernization pass. Continuous Delivery for PE also shipped a required upgrade (cd4peadm 5.17.0) for anyone integrating with newer PE versions, Security Compliance Management 3.9.0 closed out 117 CVEs across its bundled third-party components, and security_policy added a new kerberos_policy type/provider. This roundup pulls the most important changes into one place.
 
 ## Highlighted Updates
 
