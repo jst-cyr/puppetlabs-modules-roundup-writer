@@ -47,9 +47,16 @@ def normalize_version(version: str) -> str:
     return (version or '').strip().lstrip('vV').strip()
 
 
+_MARKDOWN_ESCAPE_RE = re.compile(r'\\([\\`*_{}\[\]()#+\-.!])')
+
+
 def clean_text(text: str) -> str:
     """Normalize extracted list item text."""
     cleaned = re.sub(r'\s+', ' ', text or '').strip()
+    # github_changelog_generator backslash-escapes markdown punctuation
+    # (e.g. "\(PE-1234\)", "\#213") in its raw changelog output; undo that
+    # so it doesn't leak into rendered bullets.
+    cleaned = _MARKDOWN_ESCAPE_RE.sub(r'\1', cleaned)
     if len(cleaned) < 8:
         return ''
     if cleaned.lower().startswith('version '):
