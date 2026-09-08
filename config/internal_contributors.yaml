@@ -41,6 +41,7 @@ internal:
   - beechtom           # Puppet/Perforce (confirmed)
   - mehul-jain1        # Puppet/Perforce (confirmed)
   - michaelr3207       # Puppet/Perforce (confirmed)
+  - seamymckenna       # Puppet/Perforce (confirmed) -- Comply/complyadm, CISC- ticket prefix
 
 # Contributors confirmed NOT to be Puppet/Perforce employees. Listing them
 # explicitly (instead of just leaving them unclassified) lets the script tell
@@ -77,7 +78,6 @@ community:
   - moritz-makandra
   - nabertrand
   - rajat-puppet
-  - seamymckenna
   - techsk8
   - traylenator
   - zen-fu
