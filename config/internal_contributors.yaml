@@ -42,6 +42,10 @@ internal:
   - mehul-jain1        # Puppet/Perforce (confirmed)
   - michaelr3207       # Puppet/Perforce (confirmed)
   - seamymckenna       # Puppet/Perforce (confirmed) -- Comply/complyadm, CISC- ticket prefix
+  - Magisus            # Puppet/Perforce (confirmed)
+  - chambersmp         # Puppet/Perforce (confirmed)
+  - klab-systems       # Puppet/Perforce (confirmed)
+  - tvpartytonight     # Puppet/Perforce (confirmed)
 
 # Contributors confirmed NOT to be Puppet/Perforce employees. Listing them
 # explicitly (instead of just leaving them unclassified) lets the script tell
@@ -82,3 +86,16 @@ community:
   - traylenator
   - zen-fu
   - xbulat
+  - C24-AK
+  - Geod24
+  - InsanesTheName
+  - UiP9AV6Y
+  - XMol
+  - h0tw1r3
+  - jiayuchen888
+  - jplindquist
+  - kapouik
+  - ndelic0
+  - rwaffen
+  - viscountstyx
+  - zivis
