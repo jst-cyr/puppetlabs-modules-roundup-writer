@@ -36,7 +36,7 @@ except ImportError:
     print("    pip install requests beautifulsoup4", file=sys.stderr)
     sys.exit(1)
 
-from lib import http_common, changelog_parse, external_docs
+from lib import http_common, changelog_parse, external_docs, release_sources
 
 
 def _month_bounds(year: int, month: int) -> Tuple[date, date]:
@@ -222,6 +222,7 @@ class ReleaseNotesFetcher:
         target_month: Optional[int] = None,
         target_year: Optional[int] = None,
         fallback_release_date: str = '',
+        config: Optional[Dict] = None,
     ) -> Optional[Dict]:
         """
         Fetch release notes from external docs (help.puppet.com).
@@ -229,24 +230,40 @@ class ReleaseNotesFetcher:
         Args:
             module_name: Name of the module
             version: Version number
-            docs_url: URL to fetch from
+            docs_url: URL to fetch from (used only if config is not provided)
             parser_type: Type of parser to use ('madcap_flare', 'help_puppet_html', etc.)
+            config: This module's external_docs config entry. When given, the
+                configured URL is tried first and, on a 404, an alternate
+                version-prefix URL is retried -- help.puppet.com has changed a
+                module's version-in-filename convention mid-stream before
+                (sce_linux switched to the 'v'-prefixed scheme sce_windows
+                already used, starting at 2.9.0) without warning.
 
         Returns:
             Dict with version, release_date, source, source_url, raw_html_path, parsed_bullets
             or None if fetch fails.
         """
-        print(f"Fetching external docs for {module_name} v{version} from {docs_url}", file=sys.stderr)
-        fetch_url, anchor = urldefrag(docs_url)
+        if config:
+            print(f"Fetching external docs for {module_name} v{version}...", file=sys.stderr)
+            html_content, used_url = release_sources.fetch_external_docs_html(self.session, version, config)
+            if html_content is None:
+                candidates = release_sources.build_external_docs_url_candidates(version, config)
+                print(f"ERROR: Failed to fetch external docs for {module_name} v{version} (tried {candidates})", file=sys.stderr)
+                return None
+            docs_url = used_url
+            fetch_url, anchor = urldefrag(docs_url)
+        else:
+            print(f"Fetching external docs for {module_name} v{version} from {docs_url}", file=sys.stderr)
+            fetch_url, anchor = urldefrag(docs_url)
 
-        try:
-            response = self.session.get(fetch_url, timeout=10)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"ERROR: Failed to fetch {fetch_url}: {e}", file=sys.stderr)
-            return None
+            try:
+                response = self.session.get(fetch_url, timeout=10)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                print(f"ERROR: Failed to fetch {fetch_url}: {e}", file=sys.stderr)
+                return None
 
-        html_content = response.text
+            html_content = response.text
 
         # Parse HTML to extract bullets based on parser type
         if parser_type == 'madcap_flare':
@@ -560,6 +577,7 @@ def main():
                 target_month=target_month_num,
                 target_year=target_year,
                 fallback_release_date=release_date,
+                config=module_config,
             )
         elif source == 'manual_review':
             release_info = {

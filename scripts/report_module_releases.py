@@ -216,26 +216,31 @@ class AttributionResolver:
         return result
 
 
-def _get_external_docs_html(session, html_cache: Dict[str, Optional[str]], fetch_url: str, module_name: str) -> Optional[str]:
-    """Fetch (and cache by URL) an external-docs page's HTML.
+def _get_external_docs_html(
+    session, html_cache: Dict[Tuple[str, str], Tuple[Optional[str], Optional[str]]],
+    module_name: str, version: str, ext_config: Dict,
+) -> Tuple[Optional[str], Optional[str]]:
+    """Fetch (and cache by module+version) an external-docs page's HTML.
 
-    Cached by the de-fragmented URL so a module whose in-range releases all
-    share one page differentiated only by anchor (e.g. cd4peadm) is fetched
-    once, not once per release.
+    Cached by (module_name, version) rather than URL, since resolving a
+    version to its URL may itself require trying more than one candidate
+    (see release_sources.fetch_external_docs_html) -- e.g. sce_linux changed
+    its version-in-filename convention starting at 2.9.0, so a release's
+    first-try URL can 404 and need a fallback retry.
+
+    Returns (html, url_used); (None, None) if every candidate failed.
     """
-    if fetch_url in html_cache:
-        return html_cache[fetch_url]
+    cache_key = (module_name, version)
+    if cache_key in html_cache:
+        return html_cache[cache_key]
 
-    try:
-        response = session.get(fetch_url, timeout=10)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        print(f"WARNING: Failed to fetch external docs for {module_name} ({fetch_url}): {e}", file=sys.stderr)
-        html_cache[fetch_url] = None
-        return None
+    html, used_url = release_sources.fetch_external_docs_html(session, version, ext_config)
+    if html is None:
+        print(f"WARNING: Failed to fetch external docs for {module_name} v{version} "
+              f"(tried {release_sources.build_external_docs_url_candidates(version, ext_config)})", file=sys.stderr)
 
-    html_cache[fetch_url] = response.text
-    return response.text
+    html_cache[cache_key] = (html, used_url)
+    return html, used_url
 
 
 def build_rows(
@@ -250,7 +255,7 @@ def build_rows(
     and build one ReleaseRow per in-range release."""
     rows: List[ReleaseRow] = []
     manual_review_modules: set = set()
-    external_docs_html_cache: Dict[str, Optional[str]] = {}
+    external_docs_html_cache: Dict[Tuple[str, str], Tuple[Optional[str], Optional[str]]] = {}
 
     if owner:
         print(f"Fetching {owner} module list from Forge...", file=sys.stderr)
@@ -316,10 +321,9 @@ def build_rows(
                 source_info = release_sources.get_release_notes_source(name.lower(), release_sources_config)
                 if source_info['source'] == 'external_docs':
                     ext_config = source_info['config']
-                    url = release_sources.build_external_docs_url(name, version, ext_config)
-                    fetch_url, anchor = urldefrag(url)
-                    html = _get_external_docs_html(session, external_docs_html_cache, fetch_url, name)
+                    html, used_url = _get_external_docs_html(session, external_docs_html_cache, name, version, ext_config)
                     if html is not None:
+                        _, anchor = urldefrag(used_url)
                         parser_type = ext_config.get('parser_type')
                         if parser_type == 'madcap_flare':
                             bullets = external_docs.parse_madcap_flare(
