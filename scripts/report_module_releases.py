@@ -74,6 +74,7 @@ except ImportError:
     sys.exit(1)
 
 from lib import (
+    archive_changelog,
     changelog_parse,
     contributor_classification,
     date_utils,
@@ -243,6 +244,43 @@ def _get_external_docs_html(
     return html, used_url
 
 
+def _count_attribution(bullets: List[str], resolver: 'AttributionResolver') -> Tuple[int, int]:
+    """Classify a release's changelog bullets, returning (community, unknown) counts."""
+    community = unknown = 0
+    for bullet in bullets:
+        result = resolver.resolve(bullet)
+        if result == 'community':
+            community += 1
+        elif result == 'unknown':
+            unknown += 1
+    return community, unknown
+
+
+def _get_archive_sections(
+    session, cache: Dict[str, Dict[str, Dict]], module: Dict, module_name: str,
+) -> Dict[str, Dict]:
+    """Fetch (and cache by module) ARCHIVE.md's sections, keyed by normalized version.
+
+    Returns {} if the module has no GitHub source, no ARCHIVE.md, or the
+    fetch fails -- callers just won't find a match, same as if this fallback
+    didn't exist.
+    """
+    if module_name in cache:
+        return cache[module_name]
+
+    sections_by_version: Dict[str, Dict] = {}
+    metadata = ((module.get('current_release') or {}).get('metadata')) or {}
+    repo_info = archive_changelog.github_repo_from_source(metadata.get('source', ''))
+    if repo_info:
+        archive_md = archive_changelog.fetch_archive_changelog(session, repo_info['owner'], repo_info['repo'])
+        if archive_md:
+            for section in changelog_parse.extract_release_sections(archive_md, top_level_only=True):
+                sections_by_version[changelog_parse.normalize_version(section['version'])] = section
+
+    cache[module_name] = sections_by_version
+    return sections_by_version
+
+
 def build_rows(
     session: requests.Session,
     start_date: date,
@@ -256,6 +294,7 @@ def build_rows(
     rows: List[ReleaseRow] = []
     manual_review_modules: set = set()
     external_docs_html_cache: Dict[Tuple[str, str], Tuple[Optional[str], Optional[str]]] = {}
+    archive_sections_cache: Dict[str, Dict[str, Dict]] = {}
 
     if owner:
         print(f"Fetching {owner} module list from Forge...", file=sys.stderr)
@@ -305,15 +344,7 @@ def build_rows(
                 bullets = section['bullets']
                 row.num_changes = len(bullets)
                 if classify_attribution:
-                    community = unknown = 0
-                    for bullet in bullets:
-                        result = resolver.resolve(bullet)
-                        if result == 'community':
-                            community += 1
-                        elif result == 'unknown':
-                            unknown += 1
-                    row.num_community_contributions = community
-                    row.num_unknown_contributions = unknown
+                    row.num_community_contributions, row.num_unknown_contributions = _count_attribution(bullets, resolver)
                 # else: contribution columns stay blank by design (not
                 # "unknowable from source" -- just out of scope for this
                 # publisher).
@@ -334,6 +365,21 @@ def build_rows(
                         row.num_changes = len(bullets)
                     # num_community_contributions / num_unknown_contributions stay
                     # blank: prose release notes have no attribution structure.
+                elif source_info['source'] != 'manual_review':
+                    # forge_changelog (default): this version's section isn't in
+                    # the *live* changelog Forge served -- before giving up, check
+                    # whether it was truncated out into ARCHIVE.md (see
+                    # _get_archive_sections).
+                    archive_sections = _get_archive_sections(session, archive_sections_cache, module, name)
+                    archive_section = archive_sections.get(norm_version)
+                    if archive_section is not None:
+                        bullets = archive_section['bullets']
+                        row.num_changes = len(bullets)
+                        if classify_attribution:
+                            row.num_community_contributions, row.num_unknown_contributions = _count_attribution(bullets, resolver)
+                    else:
+                        manual_review_modules.add(name)
+                        # everything stays blank: no automated bullet source at all.
                 else:
                     manual_review_modules.add(name)
                     # everything stays blank: no automated bullet source at all.
