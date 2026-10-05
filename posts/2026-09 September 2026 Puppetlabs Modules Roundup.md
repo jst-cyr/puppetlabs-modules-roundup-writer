@@ -37,7 +37,7 @@ The following is an alphabetical listing of modules which received updates in Se
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/accounts))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - (MODULES-11699) Add Puppet Core 9 support [#515](https://github.com/puppetlabs/puppetlabs-accounts/pull/515) ([skyamgarp](https://github.com/skyamgarp))
 
@@ -47,7 +47,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/acl))
 
-This release focuses on preparing the module for Puppet Core / dropping support for Puppet 7 while also addressing adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support and dropping support for Puppet 7.
 
 - (CAT-2360) Prepare module for Puppet Core / Drop Support for Puppet 7 [#310](https://github.com/puppetlabs/puppetlabs-acl/pull/310) ([david22swan](https://github.com/david22swan))
 - MODULES-11712: Add Puppet Core 9 support [#315](https://github.com/puppetlabs/puppetlabs-acl/pull/315) ([span786](https://github.com/span786))
@@ -58,7 +58,7 @@ This release focuses on preparing the module for Puppet Core / dropping support 
 
 📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/apache))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - (MODULES-11700) Add Puppet Core 9 support [#2638](https://github.com/puppetlabs/puppetlabs-apache/pull/2638) ([imaqsood](https://github.com/imaqsood))
 
@@ -68,7 +68,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-09 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/apt))
 
-This release focuses on adding support for Puppet Core 9.
+This release focused on adding support for Puppet Core 9.
 
 - (MODULES-11701) Add support for Puppet Core 9 [#1275](https://github.com/puppetlabs/puppetlabs-apt/pull/1275) ([shubhamshinde360](https://github.com/shubhamshinde360))
 
@@ -78,7 +78,7 @@ This release focuses on adding support for Puppet Core 9.
 
 📅 Latest release: 2026-09-10 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/audit_policy))
 
-This release focuses on fixing misleading ensure-change reports when only the flag differs while also addressing adding Puppet Core 9 support in puppetlabs-audit_policy.
+This release fixed misleading ensure-change reports, added Puppet Core 9 support, and addressed some maintenance issues with the repo.
 
 Includes monthly releases: 1.2.1 (2026-09-10), 1.2.0 (2026-09-08), 1.1.0 (2026-09-02).
 
@@ -93,7 +93,7 @@ Includes monthly releases: 1.2.1 (2026-09-10), 1.2.0 (2026-09-08), 1.1.0 (2026-0
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/aws_inventory))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.9.0) while also addressing the aws_inventory PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.9.0) while also adding support for Puppet Core 9.
 
 - Revert version bump from major to minor (1.0.0 -> 0.9.0) [#33](https://github.com/puppetlabs/puppetlabs-aws_inventory/pull/33) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193) aws_inventory Pdk update to Puppet Core 9 [#28](https://github.com/puppetlabs/puppetlabs-aws_inventory/pull/28) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -104,7 +104,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/azure_inventory))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.6.0) while also addressing the azure_inventory PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.6.0) while also updating to Puppet Core 9.
 
 - Revert version bump from major to minor (1.0.0 -> 0.6.0) [#21](https://github.com/puppetlabs/puppetlabs-azure_inventory/pull/21) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193) azure_inventory pdk update to Puppet Core 9 [#18](https://github.com/puppetlabs/puppetlabs-azure_inventory/pull/18) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -115,7 +115,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/bash_task_helper))
 
-This release focuses on reverting the version bump from major to minor (3.0.0 -> 2.3.0) while also addressing the bash_task_helper PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (3.0.0 -> 2.3.0) while also adding the PDK update to Puppet Core 9.
 
 - Revert version bump from major to minor (3.0.0 -> 2.3.0) [#40](https://github.com/puppetlabs/puppetlabs-bash_task_helper/pull/40) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193) bash_task_helper pdk update to Puppet Core 9 [#37](https://github.com/puppetlabs/puppetlabs-bash_task_helper/pull/37) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -126,7 +126,7 @@ This release focuses on reverting the version bump from major to minor (3.0.0 ->
 
 📅 Latest release: 2026-09-10 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/chocolatey))
 
-This release focuses on adding Puppet Core 9 support while also addressing widening the puppetlabs/registry dependency to allow 6.x.
+This release added Puppet Core 9 support and widened the puppetlabs/registry dependency to allow 6.x.
 
 - (MODULES-11731) Add Puppet Core 9 support [#390](https://github.com/puppetlabs/puppetlabs-chocolatey/pull/390) ([shubhamshinde360](https://github.com/shubhamshinde360))
 - (MODULES-11708) Widen puppetlabs/registry dependency to allow 6.x [#392](https://github.com/puppetlabs/puppetlabs-chocolatey/pull/392) ([span786](https://github.com/span786))
