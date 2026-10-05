@@ -22,17 +22,10 @@ As part of preparing for Puppet Core, `puppetdb`, `registry`, `acl`, `facter_tas
 
 ### Breaking changes to review
 
-A small number of releases include compatibility-impacting changes that may need extra review before rollout.
+A small number of releases include compatibility-impacting changes that may need extra review in your modules or environments before rolling them out.
 
-- puppetdb: puppetdb 9.0.0 drops Puppet 7 support, changes the default postgres_version from 14 to 17 to match what Puppet Enterprise now installs, and adds strict Puppet data-type validation across module parameters that may reject previously-accepted invalid values.
-- registry: registry 6.0.0 drops Puppet 7 support as part of its Puppet Core update, a major-version change that required chocolatey, wsus_client, windows_eventlog, and motd to widen their dependency bounds to allow it.
-
-### Security-related updates
-
-The following releases include security-relevant fixes or related maintenance work.
-
-- comply: comply 3.9.1 and complyadm 3.9.1 update their bundled Keycloak to 26.7.2 to address five CVEs: CVE-2026-18963, CVE-2026-16442, CVE-2026-18967, CVE-2026-15571, and CVE-2026-79652.
-- sce_linux: sce_linux 2.9.0 fixes three Ubuntu enforcement gaps: PAM profiles were enabled but not applied (causing 5.3.x controls to fail on nodes reported as compliant), rsyslog's hard-coded working directory broke logging on Ubuntu 22.04 and 24.04, and AIDE failed to initialize correctly.
+- `puppetdb`: The new version 9.0.0 drops Puppet 7 support, changes the default postgres_version from 14 to 17 to match what Puppet Enterprise now installs, and adds strict Puppet data-type validation across module parameters that may reject previously-accepted invalid values.
+- `registry`: Version 6.0.0 drops Puppet 7 support as part of its Puppet Core update, a major-version change that required chocolatey, wsus_client, windows_eventlog, and motd to widen their dependency bounds to allow it. If your module is dependent on registry, you may want to look at updating your upper bound to allow it.
 
 ## What Updates Happened to Puppetlabs Modules in September 2026?
 
