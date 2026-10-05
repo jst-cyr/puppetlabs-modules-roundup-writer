@@ -137,10 +137,7 @@ This release added Puppet Core 9 support and widened the puppetlabs/registry dep
 
 📅 Latest release: 2026-09-01 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/comply))
 
-A few highlights from this release:
-- 5 CVEs addressed.
-
-Check the official [release notes for comply 3.9.1](https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/release_notes.htm#SecurityComplianceManagement391) for the full details.
+5 CVEs were addressed in this release. Check the official [release notes for comply 3.9.1](https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/release_notes.htm#SecurityComplianceManagement391) for the full details.
 
 ---
 
@@ -148,10 +145,7 @@ Check the official [release notes for comply 3.9.1](https://help.puppet.com/scm/
 
 📅 Latest release: 2026-09-01 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/complyadm))
 
-A few highlights from this release:
-- 5 CVEs addressed.
-
-Check the official [release notes for complyadm 3.9.1](https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/release_notes.htm#SecurityComplianceManagement391) for the full details.
+5 CVEs were addressed in this release. Check the official [release notes for complyadm 3.9.1](https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/release_notes.htm#SecurityComplianceManagement391) for the full details.
 
 ---
 
@@ -234,7 +228,7 @@ This release reverted the version bump from major to minor (1.0.0 -> 0.4.0) whil
 
 📅 Latest release: 2026-09-16 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/haproxy))
 
-This release added Puppet Core 9 support, introduced the haproxy::http_errors and haproxy::ring resource types, and added Ubuntu 24.04 support.
+This release added Puppet Core 9 support, introduced the `haproxy::http_errors` and `haproxy::ring` resource types, and added Ubuntu 24.04 support.
 
 - feat(MODULES-11716) Add Puppet Core 9 support [#654](https://github.com/puppetlabs/puppetlabs-haproxy/pull/654) ([imaqsood](https://github.com/imaqsood))
 - Add haproxy::http_errors and haproxy::ring resources [#651](https://github.com/puppetlabs/puppetlabs-haproxy/pull/651) ([UiP9AV6Y](https://github.com/UiP9AV6Y))
@@ -267,7 +261,7 @@ This release focused on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-23 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/java_ks))
 
-This release made the keytool path configurable, dropped support for Puppet 7, and added Puppet Core 9 support. It also fixed incorrect boolean parameter handling and a Tempfile race condition.
+This month's releases made the keytool path configurable, dropped support for Puppet 7, and added Puppet Core 9 support. It also fixed incorrect boolean parameter handling and a Tempfile race condition.
 
 Includes monthly releases: 6.1.0 (2026-09-23), 6.0.0 (2026-09-16).
 
@@ -293,7 +287,7 @@ This release focused on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/motd))
 
-This release added Puppet Core 9 support and widened the puppetlabs/registry dependency to allow 6.x.
+This month's releases added Puppet Core 9 support and widened the puppetlabs/registry dependency to allow 6.x.
 
 Includes monthly releases: 8.1.1 (2026-09-04), 8.1.0 (2026-09-02).
 
@@ -306,7 +300,7 @@ Includes monthly releases: 8.1.1 (2026-09-04), 8.1.0 (2026-09-02).
 
 📅 Latest release: 2026-09-28 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/mysql))
 
-This release added Puppet Core 9 support, support for hex hashes with the caching_sha2_password plugin, and a fix for the mysqld_version fact on FreeBSD. It also tightened validation on purge_conf_dir, fixed .my.cnf root password resolution timing, and allowed metacharacters in SQL file paths.
+This month's releases added Puppet Core 9 support, support for hex hashes with the `caching_sha2_password` plugin, and a fix for the `mysqld_version` fact on FreeBSD. It also tightened validation on `purge_conf_dir`, fixed `.my.cnf` root password resolution timing, and allowed metacharacters in SQL file paths.
 
 Includes monthly releases: 17.3.0 (2026-09-28), 17.2.0 (2026-09-16), 17.1.1 (2026-09-02).
 
@@ -334,7 +328,7 @@ This release focused on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-15 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/peadm))
 
-This release completed the CA storage migration for split topologies, added support for PE 2023.8.11 and 2025.11.3, and surfaced provision_replica failures in the add_replica plan instead of hiding them.
+This month's releases completed the CA storage migration for split topologies, added support for PE 2023.8.11 and 2025.11.3, and surfaced provision_replica failures in the add_replica plan instead of hiding them.
 
 Includes monthly releases: 3.38.3 (2026-09-15), 3.38.2 (2026-09-01).
 
@@ -363,7 +357,7 @@ This release reverted the version bump from major to minor (1.0.0 -> 0.2.0) whil
 
 📅 Latest release: 2026-09-08 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/postgresql))
 
-This release added Puppet Core 9 support, allowed puppet/systemd 10.x, and fixed default_privileges idempotency on PostgreSQL 17.
+This release added Puppet Core 9 support, allowed `puppet/systemd` 10.x, and fixed default_privileges idempotency on PostgreSQL 17.
 
 - (MODULES-11720) Add Puppet Core 9 support in puppetlabs-postgresql [#1700](https://github.com/puppetlabs/puppetlabs-postgresql/pull/1700) ([imaqsood](https://github.com/imaqsood))
 - Allow puppet/systemd 10.x [#1691](https://github.com/puppetlabs/puppetlabs-postgresql/pull/1691) ([deric](https://github.com/deric))
@@ -407,7 +401,7 @@ This release focused on adding Puppet Core 9 support and dropping support for Pu
 
 📅 Latest release: 2026-09-30 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/puppetdb))
 
-This release dropped Puppet 7 support, changed the default postgres_version from 14 to 17, and added strict data-type validation and Sensitive-type handling for secrets across module parameters.
+This release dropped Puppet 7 support, changed the default postgres_version from 14 to 17, and added strict data-type validation and Sensitive-type handling for secrets across module parameters, along with several other fixes.
 
 - Add strict Puppet data type validation across module parameters (String, Integer, Boolean, Enum, Array, Hash, Absolutepath, Stdlib::Host, etc.), including port validation restricted to the unprivileged range (1024-49151) [#411](https://github.com/puppetlabs/puppetlabs-puppetdb/pull/411) ([chambersmp](https://github.com/chambersmp))
 - Support for Puppet Core 9
@@ -457,7 +451,7 @@ This release reverted the version bump from major to minor (1.0.0 -> 0.7.0) whil
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/registry))
 
-This release dropped Puppet 7 support, added Puppet Core 9 support, and added Sensitive data type support for registry_value.
+This release dropped Puppet 7 support, added Puppet Core 9 support, and added Sensitive data type support for `registry_value`.
 
 - (CAT-2389) Puppet Core update / Drop Puppet 7 support [#315](https://github.com/puppetlabs/puppetlabs-registry/pull/315) ([LukasAud](https://github.com/LukasAud))
 - MODULES-11708: Add Puppet Core 9 support [#320](https://github.com/puppetlabs/puppetlabs-registry/pull/320) ([span786](https://github.com/span786))
@@ -632,7 +626,7 @@ This release focused on adding support for Puppet Core 9.
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/windows_eventlog))
 
-This release widened the puppetlabs/registry dependency to allow 6.x and configured Mend for GitHub.com.
+This release widened the `puppetlabs/registry` dependency to allow 6.x and included some repo maintenance work.
 
 - (MODULES-11708) Widen puppetlabs/registry dependency to allow 6.x [#103](https://github.com/puppetlabs/puppetlabs-windows_eventlog/pull/103) ([span786](https://github.com/span786))
 - Configure Mend for GitHub.com [#92](https://github.com/puppetlabs/puppetlabs-windows_eventlog/pull/92) ([mend-for-github-com](https://github.com/mend-for-github-com))
@@ -661,11 +655,12 @@ This release reverted the version bump from major to minor (1.0.0 -> 0.3.0) whil
 
 ## Until Next Time!
 
-That wraps up the September 2026 roundup. If any of puppetdb, mysql intersect with your environment, the linked Forge pages and release notes are worth a closer look.
+That wraps up the September 2026 roundup! If any of puppetdb, mysql intersect with your environment, the linked Forge pages and release notes are worth a closer look.
 
 Feedback on the series is always useful, especially if there are module families or release-note patterns that deserve more attention in future editions.
 
-More updates coming next month when the October 2026 releases land.
+More updates coming next month when the October 2026 releases land, after Hallowe'en.🎃 
+Have a great month!
 
 ## 🤖 AI Disclosure
 
