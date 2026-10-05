@@ -2,15 +2,15 @@
 
 **Tags:** #puppet
 
-September 2026 brought 53 Puppetlabs module releases in the Puppetlabs Forge catalog, and this roundup pulls the most important changes into one place.
+September 2026 saw 53 Puppetlabs modules get releases (some of which got multiple releases) in the Puppetlabs Forge catalog, so it is going to be a full edition of this month's roundup as I try to pull all of these changes into one place.
 
-Across the month, the clearest themes were puppet 9 support rolls out across nearly the whole catalog and puppetcore prep drops puppet 7 support in seven modules, so the summary below focuses on support changes, maintenance work, and operational impact.
+Across the month, the clearest themes were Puppet Core 9 support as it rolls out across nearly the whole catalog. This preparation also saw Puppet 7 support dropped in seven modules, so the summary below focuses on support changes, maintenance work, and operational impact.
 
 ## Highlighted Updates
 
-### Puppet 9 support rolls out across nearly the whole catalog
+### Puppet Core 9 support rolls out across nearly the whole catalog
 
-Forty-nine of the fifty-three modules released this month shipped explicit Puppet 9 compatibility work — metadata bumps, new CI lanes, and in several cases a parallel Ruby 4.0 compatibility pass. The releases range from flagship modules (puppetdb, mysql, postgresql, stdlib, apache, firewall) to the full set of Bolt task-helper and cloud-inventory modules, making this the single largest coordinated update the puppetlabs namespace has shipped in one month. facts 1.8.0 is part of the same push, after first correcting an accidental major-version bump to 2.0.0 back down to a minor release.
+Forty-nine of the fifty-three modules released this month shipped explicit Puppet 9 compatibility work. This included metadata bumps, new CI lanes, and in several cases a parallel Ruby 4.0 compatibility pass. The releases range from Tier 1 modules (examples: puppetdb, mysql, postgresql, stdlib, apache, firewall) to the full set of Bolt task-helper and cloud-inventory modules, making this the single largest coordinated update the puppetlabs namespace has shipped in one month in 2026. `facts 1.8.0` is part of the same push, after first correcting an accidental major-version bump to 2.0.0 back down to a minor release.
 
 - Affected modules: puppetdb, mysql, kubernetes, security_policy, java_ks, docker, haproxy, iis, facter_task, yaml, vault, terraform, secure_env_vars, ruby_task_helper, ruby_plugin_helper, python_task_helper, powershell_task_helper, pkcs7, http_request, gcloud_inventory, bash_task_helper, azure_inventory, aws_inventory, chocolatey, audit_policy, sce_linux, wsus_client, powershell, apt, dsc_lite, postgresql, pwshlib, stdlib, motd, registry, windows_env, ntp, acl, facts, accounts, apache, concat, firewall, scheduled_task, sslcertificate, tomcat, puppet_conf, vcsrepo, sqlserver.
 
