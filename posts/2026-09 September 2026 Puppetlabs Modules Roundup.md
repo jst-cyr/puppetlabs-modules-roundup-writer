@@ -159,7 +159,7 @@ Check the official [release notes for complyadm 3.9.1](https://help.puppet.com/s
 
 📅 Latest release: 2026-09-03 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/concat))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - (MODULES-11714) Add Puppet Core 9 support [#840](https://github.com/puppetlabs/puppetlabs-concat/pull/840) ([amitkarsale](https://github.com/amitkarsale))
 
@@ -169,7 +169,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-23 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/docker))
 
-This release focuses on adding Puppet Core 9 support in puppetlabs-docker while also addressing pointing EL7 at the CentOS Docker CE repo path.
+This release added Puppet Core 9 support and fixed the EL7 Docker CE repository path to point at the correct CentOS source.
 
 - (MODULES-11718) Add Puppet Core 9 support in puppetlabs-docker [#1065](https://github.com/puppetlabs/puppetlabs-docker/pull/1065) ([imaqsood](https://github.com/imaqsood))
 - (MODULES-11929) Point EL7 at the centos Docker CE repo path [#1067](https://github.com/puppetlabs/puppetlabs-docker/pull/1067) ([imaqsood](https://github.com/imaqsood))
@@ -180,7 +180,7 @@ This release focuses on adding Puppet Core 9 support in puppetlabs-docker while 
 
 📅 Latest release: 2026-09-08 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/dsc_lite))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - Add Puppet Core 9 support [#243](https://github.com/puppetlabs/puppetlabs-dsc_lite/pull/243) ([LukasAud](https://github.com/LukasAud))
 
@@ -190,7 +190,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-15 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/facter_task))
 
-This release focuses on preparing the module for Puppet Core / dropping support for Puppet 7 while also addressing adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support and dropping support for Puppet 7, along with some CI maintenance.
 
 - (CAT-2372) Prepare module for Puppet Core / Drop Support for Puppet 7 [#243](https://github.com/puppetlabs/puppetlabs-facter_task/pull/243) ([SugatD](https://github.com/SugatD))
 - (MODULES-11722) Add Puppet Core 9 support [#246](https://github.com/puppetlabs/puppetlabs-facter_task/pull/246) ([shubhamshinde360](https://github.com/shubhamshinde360))
@@ -202,7 +202,7 @@ This release focuses on preparing the module for Puppet Core / dropping support 
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/facts))
 
-This release focuses on reverting the version bump from major to minor (2.0.0 -> 1.8.0) while also addressing the facts PDK update for Puppet Core 9 compatibility.
+This release reverted the version bump from major to minor (2.0.0 -> 1.8.0) while also adding Puppet Core 9 compatibility.
 
 - Revert version bump from major to minor (2.0.0 -> 1.8.0) [#74](https://github.com/puppetlabs/puppetlabs-facts/pull/74) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): facts pdk update for Puppet Core 9 compatibility [#71](https://github.com/puppetlabs/puppetlabs-facts/pull/71) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -213,7 +213,7 @@ This release focuses on reverting the version bump from major to minor (2.0.0 ->
 
 📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/firewall))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - MODULES-11717: Add Puppet Core 9 support [#1302](https://github.com/puppetlabs/puppetlabs-firewall/pull/1302) ([span786](https://github.com/span786))
 
@@ -223,7 +223,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/gcloud_inventory))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.4.0) while also addressing the gcloud_inventory PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.4.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.4.0) [#19](https://github.com/puppetlabs/puppetlabs-gcloud_inventory/pull/19) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): gcloud_inventory pdk update to Puppet Core 9 [#16](https://github.com/puppetlabs/puppetlabs-gcloud_inventory/pull/16) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -234,7 +234,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-16 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/haproxy))
 
-This release focuses on adding Puppet Core 9 support while also addressing adding the haproxy::http_errors and haproxy::ring resources.
+This release added Puppet Core 9 support, introduced the haproxy::http_errors and haproxy::ring resource types, and added Ubuntu 24.04 support.
 
 - feat(MODULES-11716) Add Puppet Core 9 support [#654](https://github.com/puppetlabs/puppetlabs-haproxy/pull/654) ([imaqsood](https://github.com/imaqsood))
 - Add haproxy::http_errors and haproxy::ring resources [#651](https://github.com/puppetlabs/puppetlabs-haproxy/pull/651) ([UiP9AV6Y](https://github.com/UiP9AV6Y))
@@ -246,7 +246,7 @@ This release focuses on adding Puppet Core 9 support while also addressing addin
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/http_request))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.4.0) while also addressing the http_request PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.4.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.4.0) [#24](https://github.com/puppetlabs/puppetlabs-http_request/pull/24) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): http_request pdk update to Puppet Core 9 [#20](https://github.com/puppetlabs/puppetlabs-http_request/pull/20) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -257,7 +257,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-15 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/iis))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - (MODULES-11733) Add Puppet Core 9 support [#420](https://github.com/puppetlabs/puppetlabs-iis/pull/420) ([shubhamshinde360](https://github.com/shubhamshinde360))
 
@@ -267,7 +267,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-23 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/java_ks))
 
-This release focuses on making the keytool path configurable while also addressing preparing the module for Puppet Core / dropping support for Puppet 7.
+This release made the keytool path configurable, dropped support for Puppet 7, and added Puppet Core 9 support. It also fixed incorrect boolean parameter handling and a Tempfile race condition.
 
 Includes monthly releases: 6.1.0 (2026-09-23), 6.0.0 (2026-09-16).
 
@@ -283,7 +283,7 @@ Includes monthly releases: 6.1.0 (2026-09-23), 6.0.0 (2026-09-16).
 
 📅 Latest release: 2026-09-24 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/kubernetes))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - MODULES-11735: Add Puppet Core 9 support [#723](https://github.com/puppetlabs/puppetlabs-kubernetes/pull/723) ([span786](https://github.com/span786))
 
@@ -293,7 +293,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/motd))
 
-This release focuses on widening the puppetlabs/registry dependency to allow 6.x while also addressing adding Puppet Core 9 support.
+This release added Puppet Core 9 support and widened the puppetlabs/registry dependency to allow 6.x.
 
 Includes monthly releases: 8.1.1 (2026-09-04), 8.1.0 (2026-09-02).
 
@@ -306,7 +306,7 @@ Includes monthly releases: 8.1.1 (2026-09-04), 8.1.0 (2026-09-02).
 
 📅 Latest release: 2026-09-28 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/mysql))
 
-This release focuses on adding the ability to use a hex hash with the caching_sha2_password plugin while also addressing correcting the mysqld_version fact on FreeBSD.
+This release added Puppet Core 9 support, support for hex hashes with the caching_sha2_password plugin, and a fix for the mysqld_version fact on FreeBSD. It also tightened validation on purge_conf_dir, fixed .my.cnf root password resolution timing, and allowed metacharacters in SQL file paths.
 
 Includes monthly releases: 17.3.0 (2026-09-28), 17.2.0 (2026-09-16), 17.1.1 (2026-09-02).
 
@@ -324,7 +324,7 @@ Includes monthly releases: 17.3.0 (2026-09-28), 17.2.0 (2026-09-16), 17.1.1 (202
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/ntp))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - (MODULES-11705) Add Puppet Core 9 support [#745](https://github.com/puppetlabs/puppetlabs-ntp/pull/745) ([skyamgarp](https://github.com/skyamgarp))
 
@@ -334,7 +334,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-15 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/peadm))
 
-This release focuses on adding support for PE 2023.8.11 and 2025.11.3 while also addressing completing the CA storage migration for split topologies.
+This release completed the CA storage migration for split topologies, added support for PE 2023.8.11 and 2025.11.3, and surfaced provision_replica failures in the add_replica plan instead of hiding them.
 
 Includes monthly releases: 3.38.3 (2026-09-15), 3.38.2 (2026-09-01).
 
@@ -352,7 +352,7 @@ Includes monthly releases: 3.38.3 (2026-09-15), 3.38.2 (2026-09-01).
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/pkcs7))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.2.0) while also addressing the pkcs7 PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.2.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.2.0) [#19](https://github.com/puppetlabs/puppetlabs-pkcs7/pull/19) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): pkcs7 pdk update to Puppet Core 9 [#15](https://github.com/puppetlabs/puppetlabs-pkcs7/pull/15) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -363,7 +363,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-08 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/postgresql))
 
-This release focuses on adding Puppet Core 9 support in puppetlabs-postgresql while also addressing allowing puppet/systemd 10.x.
+This release added Puppet Core 9 support, allowed puppet/systemd 10.x, and fixed default_privileges idempotency on PostgreSQL 17.
 
 - (MODULES-11720) Add Puppet Core 9 support in puppetlabs-postgresql [#1700](https://github.com/puppetlabs/puppetlabs-postgresql/pull/1700) ([imaqsood](https://github.com/imaqsood))
 - Allow puppet/systemd 10.x [#1691](https://github.com/puppetlabs/puppetlabs-postgresql/pull/1691) ([deric](https://github.com/deric))
@@ -375,7 +375,7 @@ This release focuses on adding Puppet Core 9 support in puppetlabs-postgresql wh
 
 📅 Latest release: 2026-09-09 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/powershell))
 
-This release focuses on adding support for Puppet Core 9.
+This release focused on adding support for Puppet Core 9.
 
 - (MODULES-11706) Add support for Puppet Core 9 [#440](https://github.com/puppetlabs/puppetlabs-powershell/pull/440) ([shubhamshinde360](https://github.com/shubhamshinde360))
 
@@ -385,7 +385,7 @@ This release focuses on adding support for Puppet Core 9.
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/powershell_task_helper))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.2.0) while also addressing the powershell_task_helper PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.2.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.2.0) [#10](https://github.com/puppetlabs/puppetlabs-powershell_task_helper/pull/10) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193) powershell_task_helper pdk update to Puppet Core 9 [#7](https://github.com/puppetlabs/puppetlabs-powershell_task_helper/pull/7) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -396,7 +396,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/puppet_conf))
 
-This release focuses on preparing the module for Puppet Core / dropping support for Puppet 7 while also addressing adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support and dropping support for Puppet 7.
 
 - (CAT-2387) Prepare module for Puppet Core / Drop Support for Puppet 7 [#223](https://github.com/puppetlabs/puppetlabs-puppet_conf/pull/223) ([SugatD](https://github.com/SugatD))
 - (MODULES-11736) Add Puppet Core 9 support [#225](https://github.com/puppetlabs/puppetlabs-puppet_conf/pull/225) ([imaqsood](https://github.com/imaqsood))
@@ -407,7 +407,7 @@ This release focuses on preparing the module for Puppet Core / dropping support 
 
 📅 Latest release: 2026-09-30 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/puppetdb))
 
-This release focuses on adding strict Puppet data type validation across module parameters (String, Integer, Boolean, Enum, Array, Hash, Absolutepath, Stdlib::Host, etc.), including port validation restricted to the unprivileged range (1024-49151), while also addressing support for Puppet Core 9.
+This release dropped Puppet 7 support, changed the default postgres_version from 14 to 17, and added strict data-type validation and Sensitive-type handling for secrets across module parameters.
 
 - Add strict Puppet data type validation across module parameters (String, Integer, Boolean, Enum, Array, Hash, Absolutepath, Stdlib::Host, etc.), including port validation restricted to the unprivileged range (1024-49151) [#411](https://github.com/puppetlabs/puppetlabs-puppetdb/pull/411) ([chambersmp](https://github.com/chambersmp))
 - Support for Puppet Core 9
@@ -433,7 +433,7 @@ This release focuses on adding strict Puppet data type validation across module 
 
 📅 Latest release: 2026-09-07 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/pwshlib))
 
-This release focuses on declaring Puppet Core 9 support in metadata.json requirements while also addressing adding a Ruby 4.0 / Puppet Core 9 lane, sourcing gems from Puppet Core.
+This release declared Puppet Core 9 support in metadata.json and added a Ruby 4.0 / Puppet Core 9 CI lane, sourcing gems from Puppet Core.
 
 Includes monthly releases: 2.1.1 (2026-09-07), 2.1.0 (2026-09-07).
 
@@ -446,7 +446,7 @@ Includes monthly releases: 2.1.1 (2026-09-07), 2.1.0 (2026-09-07).
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/python_task_helper))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.7.0) while also addressing the python_task_helper PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.7.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.7.0) [#25](https://github.com/puppetlabs/puppetlabs-python_task_helper/pull/25) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): python_task_helper pdk update to Puppet Core 9 [#22](https://github.com/puppetlabs/puppetlabs-python_task_helper/pull/22) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -457,7 +457,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/registry))
 
-This release focuses on the Puppet Core update / dropping Puppet 7 support while also addressing adding Puppet Core 9 support.
+This release dropped Puppet 7 support, added Puppet Core 9 support, and added Sensitive data type support for registry_value.
 
 - (CAT-2389) Puppet Core update / Drop Puppet 7 support [#315](https://github.com/puppetlabs/puppetlabs-registry/pull/315) ([LukasAud](https://github.com/LukasAud))
 - MODULES-11708: Add Puppet Core 9 support [#320](https://github.com/puppetlabs/puppetlabs-registry/pull/320) ([span786](https://github.com/span786))
@@ -470,7 +470,7 @@ This release focuses on the Puppet Core update / dropping Puppet 7 support while
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/ruby_plugin_helper))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.4.0) while also addressing the ruby_plugin_helper PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.4.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.4.0) [#13](https://github.com/puppetlabs/puppetlabs-ruby_plugin_helper/pull/13) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193) ruby_plugin_helper pdk update to Puppet Core 9 [#10](https://github.com/puppetlabs/puppetlabs-ruby_plugin_helper/pull/10) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -481,7 +481,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/ruby_task_helper))
 
-This release focuses on reverting the version bump from major to minor (2.0.0 -> 1.1.0) while also addressing the ruby_task_helper PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (2.0.0 -> 1.1.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (2.0.0 -> 1.1.0) [#31](https://github.com/puppetlabs/puppetlabs-ruby_task_helper/pull/31) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): ruby_task_helper pdk update to Puppet Core 9 [#26](https://github.com/puppetlabs/puppetlabs-ruby_task_helper/pull/26) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -505,7 +505,7 @@ Check the official [release notes for sce_linux 2.9.0](https://help.puppet.com/s
 
 📅 Latest release: 2026-09-03 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/scheduled_task))
 
-This release focuses on adding support for Puppet Core 9.
+This release focused on adding support for Puppet Core 9.
 
 - (MODULES-11734) Add support for Puppet Core 9 [#277](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/277) ([SugatD](https://github.com/SugatD))
 
@@ -515,7 +515,7 @@ This release focuses on adding support for Puppet Core 9.
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/secure_env_vars))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.3.0) while also addressing the secure_env_vars PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.3.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.3.0) [#8](https://github.com/puppetlabs/puppetlabs-secure_env_vars/pull/8) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): secure_env_vars pdk update to Puppet Core 9 [#5](https://github.com/puppetlabs/puppetlabs-secure_env_vars/pull/5) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -526,7 +526,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-24 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/security_policy))
 
-This release focuses on adding Puppet Core 9 support while also addressing isolating per-SID translation failures from the whole batch.
+This release added Puppet Core 9 support, isolated per-SID translation failures so one bad SID no longer fails the whole batch, and fixed the security_option provider missing out-of-band policy drift.
 
 Includes monthly releases: 1.2.0 (2026-09-23), 1.1.2 (2026-09-18), 1.1.1 (2026-09-01).
 
@@ -540,7 +540,7 @@ Includes monthly releases: 1.2.0 (2026-09-23), 1.1.2 (2026-09-18), 1.1.1 (2026-0
 
 📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/sqlserver))
 
-This release focuses on adding Puppet Core 9 support in puppetlabs-sqlserver while also addressing forcing a reinstall of the puppet_agent module in the acceptance bootstrap.
+This release focused on adding Puppet Core 9 support, along with several CI and test-infrastructure fixes.
 
 - (MODULES-11725) Add Puppet Core 9 support in puppetlabs-sqlserver [#511](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/511) ([imaqsood](https://github.com/imaqsood))
 - (MODULES-11902) Force reinstall puppet_agent module in acceptance bootstrap [#507](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/507) ([SugatD](https://github.com/SugatD))
@@ -556,7 +556,7 @@ This release focuses on adding Puppet Core 9 support in puppetlabs-sqlserver whi
 
 📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/sslcertificate))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - (MODULES-11726) Add Puppet Core 9 support [#145](https://github.com/puppetlabs/puppetlabs-sslcertificate/pull/145) ([imaqsood](https://github.com/imaqsood))
 
@@ -566,7 +566,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-07 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/stdlib))
 
-This release focuses on adding Puppet Core 9 support.
+This release focused on adding Puppet Core 9 support.
 
 - (MODULES-11710) Add Puppet Core 9 support [#1482](https://github.com/puppetlabs/puppetlabs-stdlib/pull/1482) ([skyamgarp](https://github.com/skyamgarp))
 
@@ -576,7 +576,7 @@ This release focuses on adding Puppet Core 9 support.
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/terraform))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.8.0) while also addressing the terraform PDK update to Puppet Core 9 (Ruby 4).
+This release reverted the version bump from major to minor (1.0.0 -> 0.8.0) while also adding Puppet Core 9 (Ruby 4) support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.8.0) [#46](https://github.com/puppetlabs/puppetlabs-terraform/pull/46) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193) terraform pdk update to Puppet Core 9 (Ruby 4) [#43](https://github.com/puppetlabs/puppetlabs-terraform/pull/43) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -587,7 +587,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-03 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/tomcat))
 
-This release focuses on adding Puppet Core 9 support in puppetlabs-tomcat.
+This release focused on adding Puppet Core 9 support.
 
 - fix(MODULES-11727): Add Puppet Core 9 support in puppetlabs-tomcat [#587](https://github.com/puppetlabs/puppetlabs-tomcat/pull/587) ([SugatD](https://github.com/SugatD))
 
@@ -597,7 +597,7 @@ This release focuses on adding Puppet Core 9 support in puppetlabs-tomcat.
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/vault))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.5.0) while also addressing the vault PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.5.0) while also adding Puppet Core 9 support.
 
 - Fix metadata versionRevert version bump from major to minor (1.0.0 -> 0.5.0) [#24](https://github.com/puppetlabs/puppetlabs-vault/pull/24) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): vault pdk update to Puppet Core 9 [#21](https://github.com/puppetlabs/puppetlabs-vault/pull/21) ([gavindidrichsen](https://github.com/gavindidrichsen))
@@ -608,7 +608,7 @@ This release focuses on reverting the version bump from major to minor (1.0.0 ->
 
 📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/vcsrepo))
 
-This release focuses on the Puppet Core upgrade / dropping support for Puppet 7 while also addressing adding Puppet Core 9 support.
+This release dropped Puppet 7 support, added Puppet Core 9 support, and added support for Git sparse checkouts via Git includes.
 
 - (CAT-2397) Puppet Core upgrade / Drop Support for Puppet 7 [#654](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/654) ([LukasAud](https://github.com/LukasAud))
 - MODULES-11711: Add Puppet Core 9 support [#659](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/659) ([span786](https://github.com/span786))
@@ -622,7 +622,7 @@ This release focuses on the Puppet Core upgrade / dropping support for Puppet 7 
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/windows_env))
 
-This release focuses on adding support for Puppet Core 9.
+This release focused on adding support for Puppet Core 9.
 
 - (MODULES-11728) Add support for Puppet Core 9 [#117](https://github.com/puppetlabs/puppetlabs-windows_env/pull/117) ([SugatD](https://github.com/SugatD))
 
@@ -632,7 +632,7 @@ This release focuses on adding support for Puppet Core 9.
 
 📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/windows_eventlog))
 
-This release focuses on widening the puppetlabs/registry dependency to allow 6.x while also addressing configuring Mend for GitHub.com.
+This release widened the puppetlabs/registry dependency to allow 6.x and configured Mend for GitHub.com.
 
 - (MODULES-11708) Widen puppetlabs/registry dependency to allow 6.x [#103](https://github.com/puppetlabs/puppetlabs-windows_eventlog/pull/103) ([span786](https://github.com/span786))
 - Configure Mend for GitHub.com [#92](https://github.com/puppetlabs/puppetlabs-windows_eventlog/pull/92) ([mend-for-github-com](https://github.com/mend-for-github-com))
@@ -643,7 +643,7 @@ This release focuses on widening the puppetlabs/registry dependency to allow 6.x
 
 📅 Latest release: 2026-09-09 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/wsus_client))
 
-This release focuses on adding Puppet Core 9 support while also addressing widening the puppetlabs/registry dependency to allow 6.x.
+This release added Puppet Core 9 support and widened the puppetlabs/registry dependency to allow 6.x.
 
 - MODULES-11737: Add Puppet Core 9 support [#240](https://github.com/puppetlabs/puppetlabs-wsus_client/pull/240) ([span786](https://github.com/span786))
 - (MODULES-11708) Widen puppetlabs/registry dependency to allow 6.x [#241](https://github.com/puppetlabs/puppetlabs-wsus_client/pull/241) ([span786](https://github.com/span786))
@@ -654,7 +654,7 @@ This release focuses on adding Puppet Core 9 support while also addressing widen
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/yaml))
 
-This release focuses on reverting the version bump from major to minor (1.0.0 -> 0.3.0) while also addressing the yaml PDK update to Puppet Core 9.
+This release reverted the version bump from major to minor (1.0.0 -> 0.3.0) while also adding Puppet Core 9 support.
 
 - Revert version bump from major to minor (1.0.0 -> 0.3.0) [#11](https://github.com/puppetlabs/puppetlabs-yaml/pull/11) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): yaml pdk update to Puppet Core 9 [#8](https://github.com/puppetlabs/puppetlabs-yaml/pull/8) ([gavindidrichsen](https://github.com/gavindidrichsen))
