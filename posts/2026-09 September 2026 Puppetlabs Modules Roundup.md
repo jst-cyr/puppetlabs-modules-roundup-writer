@@ -18,7 +18,7 @@ Forty-nine of the fifty-three modules released this month shipped explicit Puppe
 
 As part of preparing for Puppet Core, `puppetdb`, `registry`, `acl`, `facter_task`, `puppet_conf`, `java_ks`, and `vcsrepo` shipped new releases that drop Puppet 7 support outright. Because `registry` 6.0.0 was a major release and a breaking change, four of its dependents (`chocolatey`, `wsus_client`, `windows_eventlog`, and `motd`)  had to widen their puppetlabs/registry dependency bound to allow the new major version.
 
-- Affected modules: puppetdb, registry, acl, facter_task, puppet_conf, vcsrepo, java_ks, chocolatey, wsus_client, windows_eventlog, motd.
+- Affected modules: acl, chocolatey, facter_task, java_ks, motd, puppet_conf, puppetdb, registry, vcsrepo, windows_eventlog, wsus_client.
 
 ### Breaking changes to review
 
