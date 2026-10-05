@@ -246,7 +246,7 @@ class ReleaseNotesFetcher:
         if config:
             print(f"Fetching external docs for {module_name} v{version}...", file=sys.stderr)
             html_content, used_url = release_sources.fetch_external_docs_html(self.session, version, config)
-            if html_content is None:
+            if html_content is None or used_url is None:
                 candidates = release_sources.build_external_docs_url_candidates(version, config)
                 print(f"ERROR: Failed to fetch external docs for {module_name} v{version} (tried {candidates})", file=sys.stderr)
                 return None
