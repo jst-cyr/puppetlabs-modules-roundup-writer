@@ -2,23 +2,23 @@
 
 **Tags:** #puppet
 
-September 2026 brought 41 Puppetlabs module releases in the Puppetlabs Forge catalog, and this roundup pulls the most important changes into one place.
+September 2026 brought 53 Puppetlabs module releases in the Puppetlabs Forge catalog, and this roundup pulls the most important changes into one place.
 
-Across the month, the clearest themes were puppet 9 support rolls out across nearly the whole catalog and puppetcore prep drops puppet 7 support in five modules, so the summary below focuses on support changes, maintenance work, and operational impact.
+Across the month, the clearest themes were puppet 9 support rolls out across nearly the whole catalog and puppetcore prep drops puppet 7 support in seven modules, so the summary below focuses on support changes, maintenance work, and operational impact.
 
 ## Highlighted Updates
 
 ### Puppet 9 support rolls out across nearly the whole catalog
 
-Thirty-nine of the forty-one modules released this month shipped explicit Puppet 9 compatibility work — metadata bumps, new CI lanes, and in several cases a parallel Ruby 4.0 compatibility pass. The releases range from flagship modules (puppetdb, mysql, postgresql, stdlib) to the full set of Bolt task-helper and cloud-inventory modules, making this the single largest coordinated update the puppetlabs namespace has shipped in one month. facts 1.8.0 is part of the same push, after first correcting an accidental major-version bump to 2.0.0 back down to a minor release.
+Forty-nine of the fifty-three modules released this month shipped explicit Puppet 9 compatibility work — metadata bumps, new CI lanes, and in several cases a parallel Ruby 4.0 compatibility pass. The releases range from flagship modules (puppetdb, mysql, postgresql, stdlib, apache, firewall) to the full set of Bolt task-helper and cloud-inventory modules, making this the single largest coordinated update the puppetlabs namespace has shipped in one month. facts 1.8.0 is part of the same push, after first correcting an accidental major-version bump to 2.0.0 back down to a minor release.
 
-- Affected modules: puppetdb, mysql, kubernetes, security_policy, java_ks, docker, haproxy, iis, facter_task, yaml, vault, terraform, secure_env_vars, ruby_task_helper, ruby_plugin_helper, python_task_helper, powershell_task_helper, pkcs7, http_request, gcloud_inventory, bash_task_helper, azure_inventory, aws_inventory, chocolatey, audit_policy, sce_linux, wsus_client, powershell, apt, dsc_lite, postgresql, pwshlib, stdlib, motd, registry, windows_env, ntp, acl, facts.
+- Affected modules: puppetdb, mysql, kubernetes, security_policy, java_ks, docker, haproxy, iis, facter_task, yaml, vault, terraform, secure_env_vars, ruby_task_helper, ruby_plugin_helper, python_task_helper, powershell_task_helper, pkcs7, http_request, gcloud_inventory, bash_task_helper, azure_inventory, aws_inventory, chocolatey, audit_policy, sce_linux, wsus_client, powershell, apt, dsc_lite, postgresql, pwshlib, stdlib, motd, registry, windows_env, ntp, acl, facts, accounts, apache, concat, firewall, scheduled_task, sslcertificate, tomcat, puppet_conf, vcsrepo, sqlserver.
 
-### Puppetcore prep drops Puppet 7 support in five modules
+### Puppetcore prep drops Puppet 7 support in seven modules
 
-As part of preparing for Puppetcore, puppetdb, registry, acl, and facter_task shipped major version bumps that drop Puppet 7 support outright; java_ks dropped it too, but in a minor release rather than a major one. Because registry 6.0.0 is a breaking change, four of its dependents — chocolatey, wsus_client, windows_eventlog, and motd — had to widen their puppetlabs/registry dependency bound to allow the new major version.
+As part of preparing for Puppetcore, puppetdb, registry, acl, facter_task, puppet_conf, and vcsrepo shipped major version bumps that drop Puppet 7 support outright; java_ks dropped it too, but in a minor release rather than a major one. Because registry 6.0.0 is a breaking change, four of its dependents — chocolatey, wsus_client, windows_eventlog, and motd — had to widen their puppetlabs/registry dependency bound to allow the new major version.
 
-- Affected modules: puppetdb, registry, acl, facter_task, java_ks, chocolatey, wsus_client, windows_eventlog, motd.
+- Affected modules: puppetdb, registry, acl, facter_task, puppet_conf, vcsrepo, java_ks, chocolatey, wsus_client, windows_eventlog, motd.
 
 ### Breaking changes to review
 
@@ -31,11 +31,22 @@ A small number of releases include compatibility-impacting changes that may need
 
 The following releases include security-relevant fixes or related maintenance work.
 
+- comply: comply 3.9.1 and complyadm 3.9.1 update their bundled Keycloak to 26.7.2 to address five CVEs: CVE-2026-18963, CVE-2026-16442, CVE-2026-18967, CVE-2026-15571, and CVE-2026-79652.
 - sce_linux: sce_linux 2.9.0 fixes three Ubuntu enforcement gaps: PAM profiles were enabled but not applied (causing 5.3.x controls to fail on nodes reported as compliant), rsyslog's hard-coded working directory broke logging on Ubuntu 22.04 and 24.04, and AIDE failed to initialize correctly.
 
 ## What Updates Happened to Puppetlabs Modules in September 2026?
 
 The following is an alphabetical listing of modules which received updates in September 2026. If a module had multiple versions released, the updates are collected together, numbered with the "latest" version available.
+
+---
+
+### accounts 9.1.0
+
+📅 Latest release: 2026-09-04 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/accounts))
+
+This release focuses on add Puppet 9 support.
+
+- (MODULES-11699) Add Puppet 9 support [#515](https://github.com/puppetlabs/puppetlabs-accounts/pull/515) ([skyamgarp](https://github.com/skyamgarp))
 
 ---
 
@@ -47,6 +58,16 @@ This release focuses on prepare module for Puppetcore / Drop Support for Puppet 
 
 - (CAT-2360) Prepare module for Puppetcore / Drop Support for Puppet 7 [#310](https://github.com/puppetlabs/puppetlabs-acl/pull/310) ([david22swan](https://github.com/david22swan))
 - MODULES-11712: Add Puppet 9 support [#315](https://github.com/puppetlabs/puppetlabs-acl/pull/315) ([span786](https://github.com/span786))
+
+---
+
+### apache 13.4.0
+
+📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/apache))
+
+This release focuses on add Puppet 9 support.
+
+- (MODULES-11700) Add Puppet 9 support [#2638](https://github.com/puppetlabs/puppetlabs-apache/pull/2638) ([imaqsood](https://github.com/imaqsood))
 
 ---
 
@@ -119,6 +140,38 @@ This release focuses on add Puppet 9 support while also addressing widen puppetl
 
 ---
 
+### comply 3.9.1
+
+📅 Latest release: 2026-09-01 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/comply))
+
+A few highlights from this release:
+- 5 CVEs addressed.
+
+Check the official [release notes for comply 3.9.1](https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/release_notes.htm#SecurityComplianceManagement391) for the full details.
+
+---
+
+### complyadm 3.9.1
+
+📅 Latest release: 2026-09-01 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/complyadm))
+
+A few highlights from this release:
+- 5 CVEs addressed.
+
+Check the official [release notes for complyadm 3.9.1](https://help.puppet.com/scm/current/Content/UserGuide/SCM/Release_notes/release_notes.htm#SecurityComplianceManagement391) for the full details.
+
+---
+
+### concat 10.1.0
+
+📅 Latest release: 2026-09-03 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/concat))
+
+This release focuses on add Puppet 9 support.
+
+- (MODULES-11714) Add Puppet 9 support [#840](https://github.com/puppetlabs/puppetlabs-concat/pull/840) ([amitkarsale](https://github.com/amitkarsale))
+
+---
+
 ### docker 10.5.0
 
 📅 Latest release: 2026-09-23 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/docker))
@@ -160,6 +213,16 @@ This release focuses on revert version bump from major to minor (2.0.0 -> 1.8.0)
 
 - Revert version bump from major to minor (2.0.0 -> 1.8.0) [#74](https://github.com/puppetlabs/puppetlabs-facts/pull/74) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): facts pdk update for Puppet 9 compatibility [#71](https://github.com/puppetlabs/puppetlabs-facts/pull/71) ([gavindidrichsen](https://github.com/gavindidrichsen))
+
+---
+
+### firewall 8.6.0
+
+📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/firewall))
+
+This release focuses on add Puppet 9 support.
+
+- MODULES-11717: Add Puppet 9 support [#1302](https://github.com/puppetlabs/puppetlabs-firewall/pull/1302) ([span786](https://github.com/span786))
 
 ---
 
@@ -336,6 +399,17 @@ This release focuses on revert version bump from major to minor (1.0.0 -> 0.2.0)
 
 ---
 
+### puppet_conf 3.0.0
+
+📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/puppet_conf))
+
+This release focuses on prepare module for Puppetcore / Drop Support for Puppet 7 while also addressing add Puppet 9 support.
+
+- (CAT-2387) Prepare module for Puppetcore / Drop Support for Puppet 7 [#223](https://github.com/puppetlabs/puppetlabs-puppet_conf/pull/223) ([SugatD](https://github.com/SugatD))
+- (MODULES-11736) Add Puppet 9 support [#225](https://github.com/puppetlabs/puppetlabs-puppet_conf/pull/225) ([imaqsood](https://github.com/imaqsood))
+
+---
+
 ### puppetdb 9.0.0
 
 📅 Latest release: 2026-09-30 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/puppetdb))
@@ -434,6 +508,16 @@ Check the official [release notes for sce_linux 2.9.0](https://help.puppet.com/s
 
 ---
 
+### scheduled_task 5.1.0
+
+📅 Latest release: 2026-09-03 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/scheduled_task))
+
+This release focuses on add support for Puppet 9.
+
+- (MODULES-11734) Add support for Puppet 9 [#277](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/277) ([SugatD](https://github.com/SugatD))
+
+---
+
 ### secure_env_vars 0.3.0
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/secure_env_vars))
@@ -459,6 +543,32 @@ Includes monthly releases: 1.2.0 (2026-09-23), 1.1.2 (2026-09-18), 1.1.1 (2026-0
 
 ---
 
+### sqlserver 5.2.0
+
+📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/sqlserver))
+
+This release focuses on add puppet 9 support in puppetlabs-sqlserver while also addressing force reinstall puppet_agent module in acceptance bootstrap.
+
+- (MODULES-11725) Add puppet 9 support in puppetlabs-sqlserver [#511](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/511) ([imaqsood](https://github.com/imaqsood))
+- (MODULES-11902) Force reinstall puppet_agent module in acceptance bootstrap [#507](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/507) ([SugatD](https://github.com/SugatD))
+- (MODULES-11838) Update link to Puppet modules contributing documentation [#504](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/504) ([imaqsood](https://github.com/imaqsood))
+- (maint) Bump nightly ruby version to 3.2 [#513](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/513) ([imaqsood](https://github.com/imaqsood))
+- (maint) Bump actions/checkout from v3 to v4 [#503](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/503) ([imaqsood](https://github.com/imaqsood))
+- Release prep v5.1.1 [#502](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/502) ([github-actions](https://github.com/github-actions))
+- Fix #464 [#494](https://github.com/puppetlabs/puppetlabs-sqlserver/pull/494) ([InsanesTheName](https://github.com/InsanesTheName))
+
+---
+
+### sslcertificate 6.1.0
+
+📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/sslcertificate))
+
+This release focuses on add Puppet 9 support.
+
+- (MODULES-11726) Add Puppet 9 support [#145](https://github.com/puppetlabs/puppetlabs-sslcertificate/pull/145) ([imaqsood](https://github.com/imaqsood))
+
+---
+
 ### stdlib 10.1.0
 
 📅 Latest release: 2026-09-07 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/stdlib))
@@ -480,6 +590,16 @@ This release focuses on revert version bump from major to minor (1.0.0 -> 0.8.0)
 
 ---
 
+### tomcat 8.1.0
+
+📅 Latest release: 2026-09-03 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/tomcat))
+
+This release focuses on fix(MODULES-11727): Add puppet 9 support in puppetlabs-tomcat.
+
+- fix(MODULES-11727): Add puppet 9 support in puppetlabs-tomcat [#587](https://github.com/puppetlabs/puppetlabs-tomcat/pull/587) ([SugatD](https://github.com/SugatD))
+
+---
+
 ### vault 0.5.0
 
 📅 Latest release: 2026-09-11 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/vault))
@@ -488,6 +608,20 @@ This release focuses on fix metadata versionRevert version bump from major to mi
 
 - Fix metadata versionRevert version bump from major to minor (1.0.0 -> 0.5.0) [#24](https://github.com/puppetlabs/puppetlabs-vault/pull/24) ([gavindidrichsen](https://github.com/gavindidrichsen))
 - (BOLT-193): vault pdk update to puppet 9 [#21](https://github.com/puppetlabs/puppetlabs-vault/pull/21) ([gavindidrichsen](https://github.com/gavindidrichsen))
+
+---
+
+### vcsrepo 8.0.0
+
+📅 Latest release: 2026-09-02 (🌐 [View on the Forge](https://forge.puppet.com/modules/puppetlabs/vcsrepo))
+
+This release focuses on puppetcore upgrade / Drop Support for Puppet 7 while also addressing add Puppet 9 support.
+
+- (CAT-2397) Puppetcore upgrade / Drop Support for Puppet 7 [#654](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/654) ([LukasAud](https://github.com/LukasAud))
+- MODULES-11711: Add Puppet 9 support [#659](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/659) ([span786](https://github.com/span786))
+- Enable Git Includes (Sparse Checkout) [#637](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/637) ([jplindquist](https://github.com/jplindquist))
+- (CAT-2296) Update github runner image to ubuntu-24.04 [#652](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/652) ([shubhamshinde360](https://github.com/shubhamshinde360))
+- Configure Mend for GitHub.com [#649](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/649) ([mend-for-github-com](https://github.com/mend-for-github-com))
 
 ---
 
