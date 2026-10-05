@@ -32,9 +32,11 @@ from lib import http_common, release_sources
 
 class ModuleDiscovery:
     """Discover modules from Puppet Forge listing."""
-    
+
     FORGE_OWNER_URL = "https://forge.puppet.com/modules/puppetlabs"
-    FORGE_LISTING_URL = "https://forge.puppet.com/modules/puppetlabs?limit=50&sort_by=latest_release&module_groups=base%20pe_only"
+    FORGE_LISTING_BASE_URL = "https://forge.puppet.com/modules/puppetlabs?sort_by=latest_release&module_groups=base%20pe_only"
+    PAGE_SIZE = 100  # Forge caps the listing endpoint's limit at 100 regardless of what's requested
+    MAX_PAGES = 5  # safety cap: 500 modules of lookback — the whole puppetlabs catalog is ~110
     
     def __init__(self, config_path: Path):
         """Initialize discovery with release notes source config."""
@@ -178,32 +180,62 @@ class ModuleDiscovery:
 
         return modules
     
-    def discover_modules(self) -> Dict:
+    def discover_modules(self, target_year: int, target_month: int) -> Dict:
         """
-        Discover all puppetlabs modules from Forge listing.
-        
-        Returns:
-            Dict with metadata and list of modules.
+        Discover puppetlabs modules from the Forge listing, paginating as needed.
+
+        The listing is sorted by latest_release descending. Since the endpoint caps
+        page size at PAGE_SIZE regardless of what's requested, a single page can miss
+        early-in-month releases once enough other modules have released more recently
+        (pushing them past the page boundary before this script runs). Keep fetching
+        pages until a page's oldest entry predates the target month, or MAX_PAGES is hit.
         """
-        print(f"Fetching Forge listing from: {self.FORGE_LISTING_URL}", file=sys.stderr)
-        
-        try:
-            response = self.session.get(self.FORGE_LISTING_URL, timeout=10)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"ERROR: Failed to fetch Forge listing: {e}", file=sys.stderr)
-            return {'metadata': {}, 'modules': []}
-        
-        # Parse HTML to extract modules
-        modules = self.discover_from_html(response.text)
-        
+        target_month_start = datetime(target_year, target_month, 1).date()
+
+        all_modules: List[Dict] = []
+        offset = 0
+        pages_fetched = 0
+
+        for page_num in range(self.MAX_PAGES):
+            url = f"{self.FORGE_LISTING_BASE_URL}&limit={self.PAGE_SIZE}&offset={offset}"
+            print(f"Fetching Forge listing from: {url}", file=sys.stderr)
+
+            try:
+                response = self.session.get(url, timeout=10)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                print(f"ERROR: Failed to fetch Forge listing: {e}", file=sys.stderr)
+                break
+
+            page_modules = self.discover_from_html(response.text)
+            pages_fetched += 1
+            if not page_modules:
+                break
+
+            all_modules.extend(page_modules)
+
+            oldest_on_page = page_modules[-1].get('release_date')
+            try:
+                oldest_date = datetime.strptime(oldest_on_page, '%Y-%m-%d').date()
+            except (TypeError, ValueError):
+                oldest_date = None
+
+            if oldest_date is not None and oldest_date < target_month_start:
+                break
+
+            offset += self.PAGE_SIZE
+        else:
+            print(f"WARNING: Hit MAX_PAGES={self.MAX_PAGES} while paginating Forge listing; "
+                  f"results may be incomplete for {target_year}-{target_month:02d}", file=sys.stderr)
+
         return {
             'metadata': {
                 'discovered_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
-                'query_url': self.FORGE_LISTING_URL,
-                'modules_seen_on_page': len(modules),
+                'query_url': f"{self.FORGE_LISTING_BASE_URL}&limit={self.PAGE_SIZE}",
+                'pages_fetched': pages_fetched,
+                'modules_seen_on_page': len(all_modules),
             },
-            'modules': modules
+            'modules': all_modules
         }
     
     def recover_overshot_releases(self, discovered: Dict, target_month: int, target_year: int) -> Dict:
@@ -400,7 +432,7 @@ def main():
     print(f"Discovering modules updated in {month_name} {args.year}...", file=sys.stderr)
     
     discovery = ModuleDiscovery(Path(args.config))
-    discovered = discovery.discover_modules()
+    discovered = discovery.discover_modules(args.year, month_num)
     discovered = discovery.recover_overshot_releases(discovered, month_num, args.year)
     discovered = discovery.filter_by_month(discovered, month_num, args.year)
     discovered = discovery.enrich_with_sources(discovered)
